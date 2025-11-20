@@ -1,0 +1,443 @@
+/* ===========================
+   POSTRO - GEN-Z STREET STYLE
+   =========================== */
+
+/* Reset & Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Gen-Z Street Colors - Bold & Vibrant */
+  --black: #000000;
+  --white: #FFFFFF;
+  --neon-green: #00FF41;
+  --neon-pink: #FF10F0;
+  --neon-yellow: #FFFF00;
+  --electric-blue: #00D9FF;
+  --hot-orange: #FF4500;
+  --purple-haze: #9D00FF;
+
+  /* Grays for contrast */
+  --gray-dark: #1a1a1a;
+  --gray-mid: #333333;
+  --gray-light: #cccccc;
+
+  /* Status Colors - High Contrast */
+  --stock-high: var(--neon-green);
+  --stock-low: var(--neon-yellow);
+  --stock-out: var(--hot-orange);
+
+  /* Typography */
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-heading: 'Archivo Black', sans-serif;
+  --font-body: 'Rubik', sans-serif;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* Sharp Edges - NO ROUNDED CORNERS */
+  --corner-sharp: 0px;
+  --corner-cut: 8px;
+  /* Only for angled cuts */
+
+  /* Borders */
+  --border-thin: 2px;
+  --border-thick: 4px;
+  --border-chunky: 6px;
+
+  /* Shadows - Sharp & Bold */
+  --shadow-tag: 4px 4px 0 var(--black);
+  --shadow-card: 8px 8px 0 var(--black);
+  --shadow-float: 12px 12px 0 var(--black);
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--white);
+  color: var(--black);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Typography Styles */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+h3 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+h4 {
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+}
+
+.display-text {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+}
+
+/* Buttons - Street Style, NO GRADIENTS */
+button,
+.btn {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: var(--border-thick) solid var(--black);
+  background: var(--white);
+  color: var(--black);
+  padding: var(--space-md) var(--space-xl);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  font-size: 1rem;
+}
+
+button:hover,
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-tag);
+}
+
+button:active,
+.btn:active {
+  transform: translate(0, 0);
+  box-shadow: none;
+}
+
+button.primary {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+
+button.accent {
+  background: var(--neon-pink);
+  color: var(--black);
+  border-color: var(--black);
+}
+
+button.danger {
+  background: var(--hot-orange);
+  color: var(--white);
+  border-color: var(--black);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Inputs - Bold Street Style */
+input,
+textarea,
+select {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: var(--space-md);
+  border: var(--border-thick) solid var(--black);
+  background: var(--white);
+  color: var(--black);
+  width: 100%;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 0 var(--border-thin) var(--neon-pink);
+}
+
+/* Cards - Sharp Geometric Design */
+.card {
+  background: var(--white);
+  border: var(--border-thick) solid var(--black);
+  padding: var(--space-lg);
+  position: relative;
+}
+
+.card-shadow {
+  box-shadow: var(--shadow-card);
+}
+
+.card-float {
+  box-shadow: var(--shadow-float);
+}
+
+/* Tags/Badges - Street Style */
+.tag {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-md);
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: var(--border-thin) solid var(--black);
+  position: relative;
+}
+
+.tag-accent {
+  background: var(--neon-pink);
+  color: var(--black);
+}
+
+.tag-green {
+  background: var(--neon-green);
+  color: var(--black);
+}
+
+.tag-yellow {
+  background: var(--neon-yellow);
+  color: var(--black);
+}
+
+.tag-orange {
+  background: var(--hot-orange);
+  color: var(--white);
+}
+
+/* Layout Utilities */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.grid-4 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* Spacing Utilities */
+.gap-sm {
+  gap: var(--space-sm);
+}
+
+.gap-md {
+  gap: var(--space-md);
+}
+
+.gap-lg {
+  gap: var(--space-lg);
+}
+
+.gap-xl {
+  gap: var(--space-xl);
+}
+
+.mt-sm {
+  margin-top: var(--space-sm);
+}
+
+.mt-md {
+  margin-top: var(--space-md);
+}
+
+.mt-lg {
+  margin-top: var(--space-lg);
+}
+
+.mt-xl {
+  margin-top: var(--space-xl);
+}
+
+.mt-2xl {
+  margin-top: var(--space-2xl);
+}
+
+.mt-3xl {
+  margin-top: var(--space-3xl);
+}
+
+.mb-sm {
+  margin-bottom: var(--space-sm);
+}
+
+.mb-md {
+  margin-bottom: var(--space-md);
+}
+
+.mb-lg {
+  margin-bottom: var(--space-lg);
+}
+
+.mb-xl {
+  margin-bottom: var(--space-xl);
+}
+
+.p-sm {
+  padding: var(--space-sm);
+}
+
+.p-md {
+  padding: var(--space-md);
+}
+
+.p-lg {
+  padding: var(--space-lg);
+}
+
+.p-xl {
+  padding: var(--space-xl);
+}
+
+/* Text Utilities */
+.text-center {
+  text-align: center;
+}
+
+.text-bold {
+  font-weight: 700;
+}
+
+.text-black {
+  font-weight: 900;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+/* Street Art Accent Elements */
+.stripe-bg {
+  background: repeating-linear-gradient(45deg,
+      var(--gray-dark),
+      var(--gray-dark) 10px,
+      var(--black) 10px,
+      var(--black) 20px);
+}
+
+.checkerboard {
+  background-image:
+    linear-gradient(45deg, var(--gray-mid) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--gray-mid) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--gray-mid) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--gray-mid) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-slide-up {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--space-md);
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+}
