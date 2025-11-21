@@ -84,11 +84,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
           height: 100%;
           object-fit: cover;
           display: block;
-          transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+          transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+          filter: grayscale(100%);
         }
         
         .product-card:hover .product-image {
             transform: scale(1.1);
+            filter: grayscale(0%);
         }
 
         .stock-badge-overlay {

@@ -1,10 +1,11 @@
 :root {
-  /* Street Style Color Palette */
-  --white: #FCF7F8;
-  --black: #1B2021;
-  --primary: #40BCD8;
-  --secondary: #F39237;
-  --danger: #D63230;
+  /* Neo-Brutalist Color Palette */
+  --white: #F4F4F0;
+  --black: #0D0D0D;
+  --primary: #CCFF00;
+  --secondary: #0033FF;
+  --accent: #FF0099;
+  --danger: #FF0099;
 
   /* Grays for contrast */
   --gray-dark: #1a1a1a;
@@ -13,21 +14,21 @@
 
   /* Legacy color mappings */
   --neon-green: var(--primary);
-  --neon-pink: var(--primary);
-  --neon-yellow: var(--secondary);
-  --electric-blue: var(--primary);
-  --hot-orange: var(--secondary);
-  --purple-haze: var(--primary);
+  --neon-pink: var(--accent);
+  --neon-yellow: var(--primary);
+  --electric-blue: var(--secondary);
+  --hot-orange: var(--accent);
+  --purple-haze: var(--secondary);
 
   /* Status Colors */
   --stock-high: var(--primary);
-  --stock-low: var(--secondary);
+  --stock-low: var(--accent);
   --stock-out: var(--danger);
 
-  /* Typography */
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-heading: 'Archivo Black', sans-serif;
-  --font-body: 'Rubik', sans-serif;
+  /* Typography - Neo-Brutalist */
+  --font-display: 'Unbounded', sans-serif;
+  --font-heading: 'Unbounded', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -38,19 +39,19 @@
   --space-2xl: 3rem;
   --space-3xl: 4rem;
 
-  /* Sharp Edges - Street Style */
+  /* Sharp Edges - No Radius */
   --corner-sharp: 0px;
-  --corner-cut: 8px;
+  --corner-cut: 0px;
 
-  /* Borders */
+  /* Borders - Thicker for Neo-Brutalism */
   --border-thin: 2px;
-  --border-thick: 4px;
-  --border-chunky: 6px;
+  --border-thick: 3px;
+  --border-chunky: 5px;
 
-  /* Shadows - Sharp & Bold */
-  --shadow-tag: 4px 4px 0 var(--black);
-  --shadow-card: 8px 8px 0 var(--black);
-  --shadow-float: 12px 12px 0 var(--black);
+  /* Hard Shadows - Neo-Brutalist Style */
+  --shadow-tag: 3px 3px 0 var(--black);
+  --shadow-card: 5px 5px 0 var(--black);
+  --shadow-float: 7px 7px 0 var(--black);
 }
 
 * {

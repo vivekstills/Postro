@@ -21,35 +21,40 @@ const Marquee: React.FC<MarqueeProps> = ({
                     <span key={index} className="marquee-item">{item}</span>
                 ))}
             </div>
+
             <style>{`
-                .marquee-container {
-                    overflow: hidden;
-                    white-space: nowrap;
-                    position: relative;
-                    display: flex;
-                    align-items: center;
-                }
+        .marquee-container {
+          background: var(--black);
+          color: var(--primary); /* Acid Green */
+          overflow: hidden;
+          white-space: nowrap;
+          padding: 12px 0;
+          border-bottom: var(--border-thick) solid var(--black);
+        }
 
-                .marquee-content {
-                    display: flex;
-                    animation: scroll linear infinite;
-                }
+        .marquee-content {
+          display: inline-block;
+          animation: scroll 15s linear infinite;
+          font-family: var(--font-heading);
+          font-weight: 900;
+          font-size: 1.2rem;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
 
-                .marquee-item {
-                    padding: 0 var(--space-xl);
-                    font-family: var(--font-display);
-                    font-size: clamp(2rem, 6vw, 4rem);
-                    text-transform: uppercase;
-                    color: transparent;
-                    -webkit-text-stroke: 2px var(--black);
-                    opacity: 0.8;
-                }
+        .marquee-item {
+          padding: 0 var(--space-xl);
+        }
 
-                @keyframes scroll {
-                    0% { transform: translateX(0); }
-                    100% { transform: translateX(-50%); }
-                }
-            `}</style>
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
         </div>
     );
 };

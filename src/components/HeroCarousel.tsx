@@ -11,38 +11,56 @@ interface CarouselSlide {
 interface HeroCarouselProps {
     slides: CarouselSlide[];
     autoPlayInterval?: number;
+    maxCollapsedSlides?: number;
 }
 
 const HeroCarousel: React.FC<HeroCarouselProps> = ({
     slides,
-    autoPlayInterval = 5000
+    autoPlayInterval = 5000,
+    maxCollapsedSlides = 5
 }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // Determine which slides to show based on expanded state
+    const displaySlides = isExpanded ? slides : slides.slice(0, maxCollapsedSlides);
+    const totalSlides = displaySlides.length;
 
     useEffect(() => {
         const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % slides.length);
+            setCurrentSlide((prev) => (prev + 1) % totalSlides);
         }, autoPlayInterval);
 
         return () => clearInterval(timer);
-    }, [slides.length, autoPlayInterval]);
+    }, [totalSlides, autoPlayInterval]);
+
+    // Reset to first slide when collapsing
+    useEffect(() => {
+        if (!isExpanded && currentSlide >= maxCollapsedSlides) {
+            setCurrentSlide(0);
+        }
+    }, [isExpanded, currentSlide, maxCollapsedSlides]);
 
     const goToSlide = (index: number) => {
         setCurrentSlide(index);
     };
 
     const nextSlide = () => {
-        setCurrentSlide((prev) => (prev + 1) % slides.length);
+        setCurrentSlide((prev) => (prev + 1) % totalSlides);
     };
 
     const prevSlide = () => {
-        setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+        setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+    };
+
+    const toggleExpand = () => {
+        setIsExpanded(!isExpanded);
     };
 
     return (
-        <div className="hero-carousel">
+        <div className={`hero-carousel ${isExpanded ? 'expanded' : 'collapsed'}`}>
             <div className="carousel-container">
-                {slides.map((slide, index) => (
+                {displaySlides.map((slide, index) => (
                     <div
                         key={index}
                         className={`carousel-slide ${index === currentSlide ? 'active' : ''}`}
@@ -70,9 +88,16 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({
                 <span>›</span>
             </button>
 
+            {/* Expand/Collapse Button - Only show if there are more than maxCollapsedSlides */}
+            {slides.length > maxCollapsedSlides && (
+                <button className="carousel-expand-btn" onClick={toggleExpand}>
+                    <span>{isExpanded ? '▲ Show Less' : `▼ Show All (${slides.length})`}</span>
+                </button>
+            )}
+
             {/* Dot Indicators */}
             <div className="carousel-dots">
-                {slides.map((_, index) => (
+                {displaySlides.map((_, index) => (
                     <button
                         key={index}
                         className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
@@ -85,10 +110,17 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({
                 .hero-carousel {
                     position: relative;
                     width: 100%;
-                    height: 500px;
+                    height: 300px;
                     overflow: hidden;
                     background: var(--black);
                     border-bottom: var(--border-chunky) solid var(--primary);
+                    border-top: var(--border-thick) solid var(--primary);
+                    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                    z-index: 1;
+                }
+
+                .hero-carousel.expanded {
+                    height: 500px;
                 }
 
                 .carousel-container {
@@ -202,6 +234,38 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({
                     right: var(--space-lg);
                 }
 
+                /* Expand/Collapse Button */
+                .carousel-expand-btn {
+                    position: absolute;
+                    bottom: var(--space-lg);
+                    right: var(--space-lg);
+                    background: var(--primary);
+                    color: var(--black);
+                    border: var(--border-thick) solid var(--black);
+                    padding: var(--space-sm) var(--space-lg);
+                    font-family: var(--font-heading);
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    z-index: 4;
+                    transition: all 0.2s ease;
+                    box-shadow: var(--shadow-tag);
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .carousel-expand-btn:hover {
+                    background: var(--secondary);
+                    transform: translate(2px, 2px);
+                    box-shadow: 1px 1px 0 var(--black);
+                }
+
+                .carousel-expand-btn span {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--space-xs);
+                }
+
                 /* Dot Indicators */
                 .carousel-dots {
                     position: absolute;
@@ -236,6 +300,10 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({
                 /* Responsive */
                 @media (max-width: 768px) {
                     .hero-carousel {
+                        height: 250px;
+                    }
+
+                    .hero-carousel.expanded {
                         height: 400px;
                     }
 
@@ -264,6 +332,13 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({
 
                     .arrow-right {
                         right: var(--space-sm);
+                    }
+
+                    .carousel-expand-btn {
+                        bottom: var(--space-md);
+                        right: var(--space-md);
+                        padding: var(--space-xs) var(--space-md);
+                        font-size: 0.8rem;
                     }
                 }
             `}</style>
