@@ -3,36 +3,36 @@ import React, { useState, useEffect } from 'react';
 import '../index.css';
 
 interface SearchBarProps {
-    onSearch: (searchTerm: string) => void;
-    placeholder?: string;
+  onSearch: (searchTerm: string) => void;
+  placeholder?: string;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
-    onSearch,
-    placeholder = "SEARCH POSTERS & STICKERS..."
+  onSearch,
+  placeholder = "SEARCH POSTERS & STICKERS..."
 }) => {
-    const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        const debounce = setTimeout(() => {
-            onSearch(searchTerm);
-        }, 300);
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      onSearch(searchTerm);
+    }, 300);
 
-        return () => clearTimeout(debounce);
-    }, [searchTerm, onSearch]);
+    return () => clearTimeout(debounce);
+  }, [searchTerm, onSearch]);
 
-    return (
-        <div className="search-bar-container">
-            <input
-                type="text"
-                className="search-input"
-                placeholder={placeholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="search-icon">🔍</span>
+  return (
+    <div className="search-bar-container">
+      <input
+        type="text"
+        className="search-input"
+        placeholder={placeholder}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <span className="search-icon">🔍</span>
 
-            <style>{`
+      <style>{`
         .search-bar-container {
           position: relative;
           width: 100%;
@@ -56,8 +56,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
         .search-input:focus {
           outline: none;
-          border-color: var(--neon-pink);
-          box-shadow: 4px 4px 0 var(--neon-pink);
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(64, 188, 216, 0.15);
         }
 
         .search-icon {
@@ -69,8 +69,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
           pointer-events: none;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default SearchBar;

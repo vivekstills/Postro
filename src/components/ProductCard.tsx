@@ -59,12 +59,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
       <style>{`
         .product-card {
           overflow: hidden;
-          transition: transform 0.2s ease;
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
           background: var(--white);
+          border: 1px solid transparent;
         }
 
         .product-card:hover {
-          transform: translateY(-4px);
+          transform: translateY(-8px);
+          box-shadow: var(--shadow-float);
+          border-color: var(--black);
         }
 
         .product-image-container {
@@ -81,16 +84,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
           height: 100%;
           object-fit: cover;
           display: block;
+          transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        .product-card:hover .product-image {
+            transform: scale(1.1);
         }
 
         .stock-badge-overlay {
           position: absolute;
           top: var(--space-md);
           right: var(--space-md);
+          z-index: 2;
         }
 
         .product-info {
           padding: var(--space-lg);
+          position: relative;
         }
 
         .product-name {
@@ -98,6 +108,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
           margin-bottom: var(--space-sm);
           text-transform: uppercase;
           line-height: 1.2;
+          font-weight: 800;
         }
 
         .product-tags {
@@ -108,6 +119,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
           width: 100%;
           padding: var(--space-md);
           font-size: 1.1rem;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          border: var(--border-thick) solid var(--black);
+          background: var(--white);
+          color: var(--black);
+          transition: all 0.2s ease;
+        }
+        
+        .select-btn.primary {
+            background: var(--black);
+            color: var(--white);
+        }
+        
+        .select-btn:not(:disabled):hover {
+            background: var(--primary);
+            color: var(--black);
+            border-color: var(--black);
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 0 var(--black);
+        }
+        
+        .select-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: var(--gray-light);
+            border-color: var(--gray-mid);
+            color: var(--gray-mid);
         }
       `}</style>
     </div>

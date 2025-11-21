@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import CategoryFilter from '../components/CategoryFilter';
 import SearchBar from '../components/SearchBar';
 import ProductGrid from '../components/ProductGrid';
+import HeroCarousel from '../components/HeroCarousel';
 import { subscribeToProducts } from '../firebase/products';
 import type { Product } from '../types';
 import '../index.css';
@@ -30,26 +31,38 @@ const HomePage: React.FC = () => {
     setActiveSubcategory(subcategory || '');
   };
 
+  // Hero carousel slides
+  const heroSlides = [
+    {
+      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200',
+      title: 'STREET ART POSTERS',
+      subtitle: 'Bold designs for your space • Premium quality • Fresh drops weekly',
+      cta: 'SHOP NOW'
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1200',
+      title: 'ANIME COLLECTION',
+      subtitle: 'Naruto, JJK, One Piece & more • Limited editions available',
+      cta: 'EXPLORE'
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1514897575457-c4db467cf78e?w=1200',
+      title: 'MOVIE CLASSICS',
+      subtitle: 'Iconic film posters • Retro & modern styles • Canvas & paper',
+      cta: 'VIEW ALL'
+    }
+  ];
+
   return (
     <div className="home-page">
       <Header />
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="container">
-          <h2 className="hero-title display-text">
-            STREET STYLE<br />
-            <span className="highlight">POSTERS & STICKERS</span>
-          </h2>
-          <p className="hero-subtitle">
-            Browse our collection • Select what you like • Stock updates in real-time
-          </p>
-        </div>
-      </section>
+      {/* Hero Carousel */}
+      <HeroCarousel slides={heroSlides} />
 
       {/* Search Section */}
       <section className="search-section">
-        <div className="container flex-center">
+        <div className="container">
           <SearchBar onSearch={setSearchTerm} />
         </div>
       </section>
@@ -57,6 +70,12 @@ const HomePage: React.FC = () => {
       {/* Main Content */}
       <section className="main-content">
         <div className="container">
+          <h2 className="section-heading">
+            <span className="heading-line"></span>
+            <span className="heading-text">ALL PRODUCTS</span>
+            <span className="heading-line"></span>
+          </h2>
+
           <div className="content-layout">
             {/* Sidebar Filter */}
             <aside className="sidebar">
@@ -101,75 +120,61 @@ const HomePage: React.FC = () => {
           background: var(--white);
         }
 
-        .hero-section {
-          background: var(--black);
-          color: var(--white);
-          padding: var(--space-3xl) 0;
-          border-bottom: var(--border-chunky) solid var(--neon-pink);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .hero-section::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 10px,
-            rgba(255, 16, 240, 0.1) 10px,
-            rgba(255, 16, 240, 0.1) 20px
-          );
-          pointer-events: none;
-        }
-
-        .hero-title {
-          position: relative;
-          z-index: 1;
-          color: var(--white);
-          text-align: center;
-          margin-bottom: var(--space-lg);
-        }
-
-        .highlight {
-          color: var(--neon-pink);
-          text-shadow: 0 0 20px var(--neon-pink);
-        }
-
-        .hero-subtitle {
-          position: relative;
-          z-index: 1;
-          text-align: center;
-          font-size: 1.2rem;
-          font-family: var(--font-body);
-          color: var(--gray-light);
-        }
-
         .search-section {
           background: var(--white);
           padding: var(--space-2xl) 0;
-          border-bottom: var(--border-thin) solid var(--black);
+          border-bottom: var(--border-thin) solid rgba(0,0,0,0.1);
+        }
+
+        .section-heading {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: var(--space-3xl) 0 var(--space-2xl);
+          gap: var(--space-lg);
+        }
+
+        .heading-line {
+          flex: 1;
+          height: var(--border-thick);
+          background: var(--black);
+          max-width: 200px;
+        }
+
+        .heading-text {
+          font-family: var(--font-display);
+          font-size: 2.5rem;
+          letter-spacing: 0.05em;
+          color: var(--black);
+          padding: 0 var(--space-md);
+          position: relative;
+        }
+
+        .heading-text::before {
+          content: '';
+          position: absolute;
+          bottom: -5px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 60%;
+          height: 4px;
+          background: var(--primary);
         }
 
         .main-content {
-          padding: var(--space-2xl) 0;
-          min-height: 60vh;
+          padding-bottom: var(--space-3xl);
         }
 
         .content-layout {
           display: grid;
-          grid-template-columns: 300px 1fr;
+          grid-template-columns: 280px 1fr;
           gap: var(--space-2xl);
           align-items: start;
         }
 
         .sidebar {
           position: sticky;
-          top: calc(120px + var(--space-lg));
+          top: calc(100px + var(--space-lg));
         }
 
         .products-main {
@@ -177,16 +182,16 @@ const HomePage: React.FC = () => {
         }
 
         .site-footer {
-          background: var(--gray-dark);
+          background: var(--black);
           color: var(--white);
-          padding: var(--space-xl) 0;
-          border-top: var(--border-thick) solid var(--neon-green);
-          margin-top: var(--space-3xl);
+          padding: var(--space-2xl) 0;
+          border-top: var(--border-chunky) solid var(--primary);
         }
 
         .footer-text {
           font-family: var(--font-body);
-          font-size: 1rem;
+          font-size: 0.9rem;
+          opacity: 0.8;
         }
 
         .loading-container {
@@ -199,8 +204,22 @@ const HomePage: React.FC = () => {
         .loading-text {
           font-family: var(--font-display);
           font-size: 3rem;
-          color: var(--neon-pink);
+          color: var(--primary);
           animation: pulse 1s ease-in-out infinite;
+        }
+
+        @media (max-width: 900px) {
+          .section-heading {
+            margin: var(--space-2xl) 0 var(--space-xl);
+          }
+
+          .heading-line {
+            max-width: 100px;
+          }
+
+          .heading-text {
+            font-size: 2rem;
+          }
         }
 
         @media (max-width: 768px) {
@@ -210,10 +229,16 @@ const HomePage: React.FC = () => {
 
           .sidebar {
             position: static;
+            margin-bottom: var(--space-xl);
           }
 
-          .hero-section {
-            padding: var(--space-2xl) 0;
+          .section-heading {
+            flex-direction: column;
+            gap: var(--space-sm);
+          }
+
+          .heading-line {
+            display: none;
           }
         }
       `}</style>

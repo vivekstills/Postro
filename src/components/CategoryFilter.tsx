@@ -141,22 +141,22 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
           text-transform: uppercase;
           cursor: pointer;
           display: flex;
-          justify-content: space-between;
           align-items: center;
           margin-bottom: var(--space-xs);
           transition: all 0.15s ease;
         }
 
         .category-btn:hover {
-          background: var(--gray-dark);
-          color: var(--white);
+          background: rgba(64, 188, 216, 0.05);
+          color: var(--primary);
           transform: translateX(4px);
+          border-color: var(--primary);
         }
 
         .category-btn.active {
           background: var(--black);
-          color: var(--neon-pink);
-          border-color: var(--neon-pink);
+          color: var(--white);
+          border-color: var(--black);
         }
 
         .expand-icon {
@@ -176,7 +176,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
           padding: var(--space-sm) var(--space-md);
           background: transparent;
           border: none;
-          border-left: var(--border-thin) solid var(--gray-mid);
+          border-left: 2px solid var(--gray-light);
           font-family: var(--font-body);
           font-size: 0.85rem;
           text-transform: uppercase;
@@ -186,16 +186,16 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
         }
 
         .subcategory-btn:hover {
-          border-left-color: var(--neon-pink);
+          border-left-color: var(--primary);
           padding-left: calc(var(--space-md) + 4px);
-          color: var(--neon-pink);
+          color: var(--primary);
         }
 
         .subcategory-btn.active {
-          background: var(--neon-pink);
           color: var(--black);
           font-weight: 700;
-          border-left-color: var(--black);
+          border-left-color: var(--primary);
+          background: rgba(64, 188, 216, 0.1);
         }
 
         @media (max-width: 768px) {

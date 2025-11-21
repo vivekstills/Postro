@@ -27,14 +27,15 @@ const Header: React.FC<HeaderProps> = () => {
 
             <style>{`
         .site-header {
-          background: var(--black);
-          color: var(--white);
-          padding: var(--space-lg) 0;
-          border-bottom: var(--border-chunky) solid var(--neon-pink);
+          background: var(--white);
+          color: var(--black);
+          padding: var(--space-md) 0;
+          border-bottom: 1px solid rgba(0,0,0,0.1);
           position: sticky;
           top: 0;
           z-index: 1000;
-          box-shadow: 0 8px 0 var(--neon-pink);
+          backdrop-filter: blur(10px);
+          background: rgba(252, 247, 248, 0.95);
         }
 
         .header-content {
@@ -45,69 +46,85 @@ const Header: React.FC<HeaderProps> = () => {
 
         .logo-link {
           text-decoration: none;
+          display: flex;
+          align-items: center;
         }
 
         .logo {
-          color: var(--neon-pink);
+          color: var(--black);
           margin: 0;
-          font-size: clamp(2rem, 5vw, 3.5rem);
-          letter-spacing: 0.1em;
-          text-shadow: 4px 4px 0 var(--white);
-          transition: all 0.2s ease;
+          font-family: var(--font-heading);
+          font-size: clamp(1.5rem, 4vw, 2rem);
+          letter-spacing: -0.02em;
+          font-weight: 800;
+          transition: all 0.3s ease;
+          position: relative;
+          display: inline-block;
+        }
+
+        /* Subtle Logo Animation */
+        .logo::after {
+          content: '';
+          position: absolute;
+          bottom: -2px;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: var(--primary);
+          transition: width 0.3s ease;
         }
 
         .logo:hover {
-          transform: scale(1.05);
-          text-shadow: 6px 6px 0 var(--neon-green);
+          color: var(--primary);
+          transform: translateY(-1px);
+        }
+
+        .logo:hover::after {
+          width: 100%;
         }
 
         .nav-links {
           display: flex;
-          gap: var(--space-xl);
+          gap: var(--space-lg);
           align-items: center;
         }
 
         .nav-link {
-          font-family: var(--font-heading);
-          font-size: 1.1rem;
+          font-family: var(--font-body);
+          font-weight: 500;
+          font-size: 0.95rem;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--white);
+          letter-spacing: 0.05em;
+          color: var(--gray-mid);
           text-decoration: none;
-          transition: all 0.15s ease;
+          transition: all 0.2s ease;
           position: relative;
         }
 
         .nav-link:hover {
-          color: var(--neon-pink);
-          transform: translateY(-2px);
-        }
-
-        .nav-link::after {
-          content: '';
-          position: absolute;
-          bottom: -4px;
-          left: 0;
-          width: 0;
-          height: var(--border-thin);
-          background: var(--neon-pink);
-          transition: width 0.2s ease;
-        }
-
-        .nav-link:hover::after {
-          width: 100%;
+          color: var(--black);
         }
 
         .admin-link .tag {
-          animation: pulse 2s ease-in-out infinite;
+          background: var(--black);
+          color: var(--white);
+          border: none;
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-size: 0.7rem;
+          transition: all 0.2s ease;
+        }
+        
+        .admin-link:hover .tag {
+          background: var(--primary);
+          transform: translateY(-1px);
         }
 
         @media (max-width: 768px) {
           .header-content {
-            flex-direction: column;
             gap: var(--space-md);
           }
-
+          
           .nav-links {
             gap: var(--space-md);
           }

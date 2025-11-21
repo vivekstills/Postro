@@ -91,9 +91,34 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 
     if (filteredProducts.length === 0) {
         return (
-            <div className="empty-state">
-                <h2>NO PRODUCTS FOUND</h2>
-                <p>Try adjusting your search or filters</p>
+            <div className="product-grid-container">
+                <div className="empty-state">
+                    <div className="empty-icon">📦</div>
+                    <h2 className="empty-text">NO PRODUCTS FOUND</h2>
+                    <p>Try adjusting your search or filters</p>
+                </div>
+
+                <style>{`
+                    .empty-state {
+                        grid-column: 1 / -1;
+                        text-align: center;
+                        padding: var(--space-3xl);
+                        background: var(--gray-light);
+                        border: var(--border-chunky) dashed var(--black);
+                    }
+
+                    .empty-icon {
+                        font-size: 4rem;
+                        margin-bottom: var(--space-lg);
+                    }
+
+                    .empty-text {
+                        font-family: var(--font-display);
+                        font-size: 2rem;
+                        color: var(--gray-mid);
+                        margin-bottom: var(--space-md);
+                    }
+                `}</style>
             </div>
         );
     }
@@ -104,7 +129,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                 <span className="tag tag-accent">{filteredProducts.length} PRODUCTS</span>
             </div>
 
-            <div className="product-grid grid grid-4 gap-lg mt-lg">
+            <div className="products-grid">
                 {filteredProducts.map((product) => (
                     <ProductCard
                         key={product.id}
@@ -115,58 +140,62 @@ const ProductGrid: React.FC<ProductGridProps> = ({
             </div>
 
             <style>{`
-        .product-grid-container {
-          width: 100%;
-        }
+                .product-grid-container {
+                    width: 100%;
+                }
 
-        .products-count {
-          display: flex;
-          justify-content: flex-start;
-          margin-bottom: var(--space-md);
-        }
+                .products-count {
+                    display: flex;
+                    justify-content: flex-start;
+                    margin-bottom: var(--space-lg);
+                }
 
-        .product-grid {
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        }
+                .products-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: var(--space-xl);
+                    width: 100%;
+                }
 
-        .loading-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          min-height: 400px;
-        }
+                .empty-state {
+                    grid-column: 1 / -1;
+                    text-align: center;
+                    padding: var(--space-3xl);
+                    background: var(--gray-light);
+                    border: var(--border-chunky) dashed var(--black);
+                }
 
-        .loading-text {
-          font-family: var(--font-display);
-          font-size: 3rem;
-          color: var(--neon-pink);
-          animation: pulse 1s ease-in-out infinite;
-        }
+                .empty-icon {
+                    font-size: 4rem;
+                    margin-bottom: var(--space-lg);
+                }
 
-        .empty-state {
-          text-align: center;
-          padding: var(--space-3xl);
-          background: var(--white);
-          border: var(--border-thick) solid var(--black);
-        }
+                .empty-text {
+                    font-family: var(--font-display);
+                    font-size: 2rem;
+                    color: var(--gray-mid);
+                    margin-bottom: var(--space-md);
+                }
 
-        .empty-state h2 {
-          margin-bottom: var(--space-md);
-          color: var(--gray-dark);
-        }
+                @media (max-width: 1200px) {
+                    .products-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
 
-        .empty-state p {
-          color: var(--gray-mid);
-          font-size: 1.1rem;
-        }
+                @media (max-width: 900px) {
+                    .products-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: var(--space-lg);
+                    }
+                }
 
-        @media (max-width: 768px) {
-          .product-grid {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: var(--space-md);
-          }
-        }
-      `}</style>
+                @media (max-width: 600px) {
+                    .products-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            `}</style>
         </div>
     );
 };
