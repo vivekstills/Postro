@@ -68,15 +68,15 @@ const CustomCursor: FC = () => {
   if (!isDesktop) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-50 hidden md:block">
+    <div className="pointer-events-none fixed inset-0 z-[9999] hidden md:block">
       <motion.div
-        className="pointer-events-none fixed z-50 h-3 w-3 rounded-full bg-dark"
+        className="pointer-events-none fixed z-[9999] h-3 w-3 rounded-full bg-dark"
         style={{ x: dotX, y: dotY }}
         animate={{ scale: isPressed ? 0.6 : 1, opacity: isVisible ? 1 : 0 }}
         transition={{ duration: 0.15 }}
       />
       <motion.div
-        className="pointer-events-none fixed z-50 h-12 w-12 rounded-full border-2 border-primary"
+        className="pointer-events-none fixed z-[9999] h-12 w-12 rounded-full border-2 border-primary"
         style={{ x: ringX, y: ringY }}
         animate={{
           scale: isHoveringInteractive ? 1.3 : 0.6,

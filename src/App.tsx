@@ -3,6 +3,7 @@ import CustomCursor from './components/CustomCursor';
 import { ToastProvider } from './components/ToastProvider';
 import HomePage from './pages/HomePage';
 import AdminPage from './pages/AdminPage';
+import SignUpPage from './pages/SignUpPage';
 import { firebaseConfigError, isFirebaseConfigured, missingFirebaseKeys } from './firebase/config';
 import './index.css';
 
@@ -35,6 +36,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
           </Routes>
         </div>
       </ToastProvider>

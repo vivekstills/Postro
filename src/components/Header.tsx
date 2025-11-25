@@ -7,6 +7,7 @@ import { Link, useLocation } from 'react-router-dom';
 const navLinks = [
   { label: 'HOME', to: '/' },
   { label: 'ADMIN', to: '/admin' },
+  { label: 'SIGN IN', to: '/signup' },
 ];
 
 const spring: Transition = { type: 'spring', stiffness: 400, damping: 25 };

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import CartSidebar from './CartSidebar';
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { setIsCartOpen, cartItemCount } = useCart();
+    const { user, signOut } = useAuth();
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -36,13 +38,38 @@ const Navbar = () => {
                     </Link>
                 </div>
 
-                {/* RIGHT SIDE ACTIONS (Cart, etc.) */}
-                <div className="flex items-center gap-4">
+                {/* RIGHT SIDE ACTIONS (Auth, Cart, etc.) */}
+                <div className="flex items-center gap-3">
+                    {/* Authentication UI */}
+                    {user ? (
+                        <div className="hidden sm:flex items-center gap-2">
+                            <div className="bg-white border-[3px] border-black px-3 py-2 shadow-[2px_2px_0px_0px_#000]">
+                                <span className="font-[Space_Grotesk] font-bold text-sm">
+                                    {user.displayName || user.email || user.phoneNumber}
+                                </span>
+                            </div>
+                            <button
+                                onClick={signOut}
+                                className="bg-[#FF0099] text-white border-[3px] border-black px-3 py-2 font-[Space_Grotesk] font-bold text-sm hover:bg-black hover:text-[#CCFF00] transition-all shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000]"
+                            >
+                                SIGN OUT
+                            </button>
+                        </div>
+                    ) : (
+                        <Link
+                            to="/signup"
+                            className="hidden sm:flex bg-primary border-[3px] border-black px-4 py-2 font-[Space_Grotesk] font-bold text-sm hover:bg-black hover:text-[#CCFF00] transition-all shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#000]"
+                        >
+                            SIGN IN
+                        </Link>
+                    )}
+
+                    {/* Cart Button */}
                     <button
                         onClick={() => setIsCartOpen(true)}
-                        className="group relative flex items-center gap-3 bg-white border-[3px] border-black px-5 py-2 hover:bg-black hover:text-[#CCFF00] transition-all shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#000]"
+                        className="group relative flex items-center gap-3 bg-white border-[3px] border-black px-4 sm:px-5 py-2 hover:bg-black hover:text-[#CCFF00] transition-all shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#000]"
                     >
-                        <span className="font-[Space_Grotesk] font-bold text-lg tracking-wide">CART</span>
+                        <span className="font-[Space_Grotesk] font-bold text-sm sm:text-lg tracking-wide">CART</span>
                         <div className="relative">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="group-hover:stroke-[#CCFF00] transition-colors">
                                 <path d="M9 20C9 21.1046 8.10457 22 7 22C5.89543 22 5 21.1046 5 20C5 18.8954 5.89543 18 7 18C8.10457 18 9 18.8954 9 20Z" />

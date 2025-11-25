@@ -4,7 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import '../index.css';
 
 const CartSidebar: React.FC = () => {
-    const { cart, isCartOpen, setIsCartOpen, updateQuantity, removeItem, timeRemaining } = useCart();
+    const { cart, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, timeRemaining } = useCart();
 
     const handleClose = () => {
         setIsCartOpen(false);
@@ -82,7 +82,7 @@ const CartSidebar: React.FC = () => {
                                             </button>
                                         </div>
                                         <button
-                                            onClick={() => removeItem(item.productId)}
+                                            onClick={() => removeFromCart(item.productId)}
                                             className="p-2 text-xs font-bold uppercase tracking-wider border-[3px] border-transparent hover:border-black hover:bg-red-500 hover:text-white transition-all"
                                             title="Remove Item"
                                         >

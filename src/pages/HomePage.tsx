@@ -5,6 +5,7 @@ import SearchBar from '../components/SearchBar';
 import ProductGrid from '../components/ProductGrid';
 import HeroCarousel from '../components/HeroCarousel';
 import Marquee from '../components/Marquee';
+import CartDrawer from '../components/CartDrawer';
 import { subscribeToProducts } from '../firebase/products';
 import type { Product } from '../types';
 
@@ -155,6 +156,8 @@ const HomePage: React.FC = () => {
           <span>POSTRO.IN</span>
         </div>
       </footer>
+
+      <CartDrawer />
     </div>
   );
 };

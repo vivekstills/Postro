@@ -193,22 +193,33 @@ export const subscribeToCart = (sessionId: string, callback: (cart: Cart | null)
     }
 
     const cartRef = doc(getCartsCollection(), sessionId);
+    let lastCartSnapshot: string | null = null; // Cache last snapshot to prevent duplicate callbacks
 
     return onSnapshot(cartRef, (snapshot) => {
         if (!snapshot.exists()) {
-            callback(null);
+            // Only trigger if we previously had data
+            if (lastCartSnapshot !== null) {
+                lastCartSnapshot = null;
+                callback(null);
+            }
             return;
         }
 
         const data = snapshot.data();
-        callback({
-            id: snapshot.id,
-            sessionId: data.sessionId,
-            items: data.items,
-            createdAt: data.createdAt?.toDate(),
-            lastUpdated: data.lastUpdated?.toDate(),
-            expiresAt: data.expiresAt?.toDate()
-        } as Cart);
+        const currentSnapshot = JSON.stringify(data);
+
+        // Only trigger callback if data actually changed
+        if (currentSnapshot !== lastCartSnapshot) {
+            lastCartSnapshot = currentSnapshot;
+            callback({
+                id: snapshot.id,
+                sessionId: data.sessionId,
+                items: data.items,
+                createdAt: data.createdAt?.toDate(),
+                lastUpdated: data.lastUpdated?.toDate(),
+                expiresAt: data.expiresAt?.toDate()
+            } as Cart);
+        }
     });
 };
 
@@ -222,6 +233,7 @@ export const subscribeToAllCarts = (callback: (carts: Cart[]) => void) => {
     const q = query(getCartsCollection());
 
     return onSnapshot(q, (snapshot) => {
+        const now = new Date();
         const carts = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
@@ -232,7 +244,9 @@ export const subscribeToAllCarts = (callback: (carts: Cart[]) => void) => {
                 lastUpdated: data.lastUpdated?.toDate(),
                 expiresAt: data.expiresAt?.toDate()
             } as Cart;
-        }).filter(cart => cart.items.length > 0); // Filter out empty carts
+        })
+            .filter(cart => cart.items.length > 0) // Filter out empty carts
+            .filter(cart => cart.expiresAt && cart.expiresAt > now); // Filter out expired carts
 
         callback(carts);
     });
