@@ -1,8 +1,23 @@
+import { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { formatCurrency } from '../utils/currency';
+import CheckoutModal from './CheckoutModal';
 
 const CartDrawer = () => {
-    const { isCartOpen, toggleCart, cartItems, updateQuantity, removeFromCart, totalPrice, timeRemaining, cartItemCount } = useCart();
+    const {
+        isCartOpen,
+        toggleCart,
+        setIsCartOpen,
+        cartItems,
+        updateQuantity,
+        removeFromCart,
+        totalPrice,
+        timeRemaining,
+        cartItemCount,
+        shippingFee,
+        completeCheckout
+    } = useCart();
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
     const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
         try {
@@ -18,6 +33,10 @@ const CartDrawer = () => {
         } catch (error) {
             console.error('Failed to remove item:', error);
         }
+    };
+
+    const handleCheckoutComplete = () => {
+        setIsCartOpen(false);
     };
 
     return (
@@ -116,11 +135,25 @@ const CartDrawer = () => {
                         <span>TOTAL</span>
                         <span>{formatCurrency(totalPrice)}</span>
                     </div>
-                    <button className="w-full bg-[#FF0099] border-[3px] border-black py-3 font-[Unbounded] font-black uppercase text-white shadow-[4px_4px_0px_0px_#000] hover:translate-y-1 hover:shadow-none hover:bg-black transition-all">
+                    <button
+                        className="w-full bg-[#FF0099] border-[3px] border-black py-3 font-[Unbounded] font-black uppercase text-white shadow-[4px_4px_0px_0px_#000] hover:translate-y-1 hover:shadow-none hover:bg-black transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+                        disabled={cartItems.length === 0}
+                        onClick={() => setIsCheckoutOpen(true)}
+                    >
                         Checkout
                     </button>
                 </div>
             </div>
+
+            <CheckoutModal
+                isOpen={isCheckoutOpen}
+                onClose={() => setIsCheckoutOpen(false)}
+                cartItems={cartItems}
+                subtotal={totalPrice}
+                shipping={shippingFee}
+                onCheckout={completeCheckout}
+                onCheckoutComplete={() => handleCheckoutComplete()}
+            />
         </>
     );
 };

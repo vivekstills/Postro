@@ -1,17 +1,21 @@
 // Cart Context - Global cart state management
 import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import type { Cart, CartItem, Product } from '../types';
+import type { Cart, CartItem, Product, CheckoutDetails, CheckoutResult } from '../types';
 import {
     addToCart as addToCartFirebase,
     subscribeToCart,
     updateCartItemQuantity,
     removeFromCart as removeFromCartFirebase,
     updateCartTimestamp,
-    checkExpiredCarts
+    checkExpiredCarts,
+    clearCart
 } from '../firebase/cart';
 import { useToast } from '../components/ToastProvider';
 import { isFirebaseConfigured } from '../firebase/config';
+import { createInvoice, updateInvoice } from '../firebase/invoices';
+import type { InvoiceInput } from '../firebase/invoices';
+import { calculateTotals, DEFAULT_SHIPPING_FEE, generateInvoiceNumber, isInvoiceEmailConfigured, sendInvoiceEmail } from '../utils/invoice';
 
 interface CartContextType {
     cart: Cart | null;
@@ -25,6 +29,8 @@ interface CartContextType {
     removeFromCart: (productId: string) => Promise<void>;
     totalPrice: number;
     timeRemaining: string;
+    shippingFee: number;
+    completeCheckout: (details: CheckoutDetails) => Promise<CheckoutResult | null>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -357,6 +363,78 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     const totalPrice = useMemo(() => cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0), [cartItems]);
 
+    const completeCheckout = async (details: CheckoutDetails): Promise<CheckoutResult | null> => {
+        if (!cart || cart.items.length === 0) {
+            addToast('CART EMPTY');
+            return null;
+        }
+
+        if (!isFirebaseConfigured) {
+            addToast('FIREBASE NOT CONFIGURED • CHECKOUT DISABLED');
+            return null;
+        }
+
+        if (!details.fullName || !details.email) {
+            addToast('NAME & EMAIL REQUIRED');
+            return null;
+        }
+
+        try {
+            const { subtotal, shipping, total } = calculateTotals(cart.items, DEFAULT_SHIPPING_FEE);
+            const invoiceData: InvoiceInput = {
+                orderNumber: generateInvoiceNumber(),
+                customerName: details.fullName,
+                customerEmail: details.email,
+                customerPhone: details.phone,
+                customerAddress: details.address,
+                customerCity: details.city,
+                customerPostalCode: details.postalCode,
+                notes: details.notes,
+                items: cart.items,
+                subtotal,
+                shipping,
+                total,
+                status: isInvoiceEmailConfigured() ? 'pending' : 'pending-email'
+            };
+
+            const invoice = await createInvoice(invoiceData);
+            let emailed = false;
+
+            if (isInvoiceEmailConfigured()) {
+                try {
+                    await sendInvoiceEmail(invoice);
+                    emailed = true;
+                    if (invoice.id) {
+                        await updateInvoice(invoice.id, { status: 'emailed', emailedAt: new Date() });
+                    }
+                } catch (emailError) {
+                    console.error('Failed to send invoice email:', emailError);
+                    if (invoice.id) {
+                        await updateInvoice(invoice.id, { status: 'pending-email' });
+                    }
+                }
+            }
+
+            await clearCart(sessionId);
+            setCart(null);
+            setCachedCart(null);
+            addToast('ORDER CONFIRMED • RECEIPT READY');
+
+            return {
+                invoice: {
+                    ...invoice,
+                    status: emailed ? 'emailed' : 'pending-email',
+                    emailedAt: emailed ? new Date() : invoice.emailedAt
+                },
+                emailed
+            };
+        } catch (error) {
+            console.error('Error completing checkout:', error);
+            addToast('ERROR • Checkout failed');
+            return null;
+        }
+    };
+
     return (
         <CartContext.Provider
             value={{
@@ -370,7 +448,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 updateQuantity,
                 removeFromCart,
                 totalPrice,
-                timeRemaining
+                timeRemaining,
+                shippingFee: DEFAULT_SHIPPING_FEE,
+                completeCheckout
             }}
         >
             {children}

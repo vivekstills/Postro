@@ -48,3 +48,37 @@ export interface Cart {
     lastUpdated?: Date | null;
     expiresAt?: Date | null;
 }
+
+export interface Invoice {
+    id?: string;
+    orderNumber: string;
+    customerName: string;
+    customerEmail: string;
+    customerPhone?: string;
+    customerAddress?: string;
+    customerCity?: string;
+    customerPostalCode?: string;
+    notes?: string;
+    items: CartItem[];
+    subtotal: number;
+    shipping: number;
+    total: number;
+    status?: 'pending' | 'emailed' | 'pending-email';
+    createdAt?: Date | null;
+    emailedAt?: Date | null;
+}
+
+export interface CheckoutDetails {
+    fullName: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    notes?: string;
+}
+
+export interface CheckoutResult {
+    invoice: Invoice;
+    emailed: boolean;
+}

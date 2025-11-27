@@ -4,13 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
-import { addProduct, getAllProducts, deleteProduct, increaseStock } from '../firebase/products';
+import { addProduct, getAllProducts, deleteProduct, increaseStock, updateProduct } from '../firebase/products';
 import { getAllSalesLogs, getTopSellingProducts, clearAllSalesLogs } from '../firebase/salesLog';
+import { getRecentInvoices } from '../firebase/invoices';
 import { subscribeToAllCarts } from '../firebase/cart';
-import type { Product, SaleLog, Cart } from '../types';
+import type { Product, SaleLog, Cart, Invoice } from '../types';
 import { format } from 'date-fns';
 import { useToast } from '../components/ToastProvider';
 import { formatCurrency } from '../utils/currency';
+import { downloadInvoice } from '../utils/invoice';
 import '../index.css';
 
 const AdminPage: React.FC = () => {
@@ -40,15 +42,19 @@ const AdminPage: React.FC = () => {
     const [topProducts, setTopProducts] = useState<{ productName: string; count: number }[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
     const [liveCarts, setLiveCarts] = useState<Cart[]>([]);
+    const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [productTypeFilter, setProductTypeFilter] = useState<'poster' | 'sticker'>('poster');
     const [addStockProductId, setAddStockProductId] = useState<string | null>(null);
     const [addStockAmount, setAddStockAmount] = useState('1');
+    const [editPriceProductId, setEditPriceProductId] = useState<string | null>(null);
+    const [editPriceValue, setEditPriceValue] = useState('');
 
     useEffect(() => {
         if (isAuthenticated) {
             loadSalesData();
             loadProducts();
+            loadInvoices();
 
             const unsubscribeCarts = subscribeToAllCarts((carts) => {
                 setLiveCarts(carts);
@@ -70,6 +76,11 @@ const AdminPage: React.FC = () => {
     const loadProducts = async () => {
         const products = await getAllProducts();
         setAllProducts(products);
+    };
+
+    const loadInvoices = async () => {
+        const invoices = await getRecentInvoices(25);
+        setRecentInvoices(invoices);
     };
 
     const handleLogin = (e: React.FormEvent) => {
@@ -189,6 +200,7 @@ const AdminPage: React.FC = () => {
             setAddStockProductId(productId);
             setAddStockAmount('1');
         }
+        setEditPriceProductId(null);
     };
 
     const confirmAddStock = async (productId: string, productName: string) => {
@@ -207,6 +219,41 @@ const AdminPage: React.FC = () => {
             console.error('Error adding stock:', error);
             addToast('ERROR • Failed to add stock');
         }
+    };
+
+    const handleEditPrice = (productId: string, currentPrice: number) => {
+        if (editPriceProductId === productId) {
+            setEditPriceProductId(null);
+            setEditPriceValue('');
+        } else {
+            setEditPriceProductId(productId);
+            setEditPriceValue(currentPrice.toString());
+        }
+        setAddStockProductId(null);
+    };
+
+    const confirmPriceUpdate = async (productId: string, productName: string) => {
+        const parsed = Number(editPriceValue);
+        if (!editPriceValue || Number.isNaN(parsed) || parsed <= 0) {
+            addToast('INVALID PRICE');
+            return;
+        }
+
+        try {
+            await updateProduct(productId, { price: parsed });
+            addToast(`${productName.toUpperCase()} • PRICE UPDATED`);
+            setEditPriceProductId(null);
+            setEditPriceValue('');
+            loadProducts();
+        } catch (error) {
+            console.error('Error updating price:', error);
+            addToast('ERROR • Failed to update price');
+        }
+    };
+
+    const handleDownloadInvoice = (invoice: Invoice) => {
+        downloadInvoice(invoice);
+        addToast(`INVOICE • ${invoice.orderNumber}`);
     };
 
     // Filter products for analytics tab
@@ -556,6 +603,44 @@ const AdminPage: React.FC = () => {
                                         >
                                             🗑️ DELETE
                                         </button>
+
+                                        <button
+                                            className="primary price-btn"
+                                            onClick={() => handleEditPrice(product.id!, product.price)}
+                                            title="Update price"
+                                        >
+                                            💰 PRICE
+                                        </button>
+
+                                        {editPriceProductId === product.id && (
+                                            <div className="edit-price-card">
+                                                <label className="add-stock-label">NEW PRICE (INR)</label>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    step="0.5"
+                                                    value={editPriceValue}
+                                                    onChange={(e) => setEditPriceValue(e.target.value)}
+                                                    className="add-stock-input"
+                                                    placeholder="799"
+                                                    autoFocus
+                                                />
+                                                <div className="add-stock-actions">
+                                                    <button
+                                                        className="accent add-stock-confirm"
+                                                        onClick={() => confirmPriceUpdate(product.id!, product.name)}
+                                                    >
+                                                        ✓ SAVE
+                                                    </button>
+                                                    <button
+                                                        className="add-stock-cancel"
+                                                        onClick={() => { setEditPriceProductId(null); setEditPriceValue(''); }}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -643,6 +728,53 @@ const AdminPage: React.FC = () => {
                                 })}
                             </div>
                         )}
+
+                        <div className="section-header mt-16">
+                            <h3 className="mb-lg">RECENT RECEIPTS ({recentInvoices.length})</h3>
+                            <button className="primary" onClick={loadInvoices}>
+                                REFRESH
+                            </button>
+                        </div>
+
+                        {recentInvoices.length === 0 ? (
+                            <div className="empty-state">
+                                <div className="empty-icon">📭</div>
+                                <h2 className="empty-text">NO RECEIPTS YET</h2>
+                                <p>Invoices appear here after customers checkout.</p>
+                            </div>
+                        ) : (
+                            <div className="invoices-grid">
+                                {recentInvoices.map((invoice) => (
+                                    <div key={invoice.id} className="invoice-card card card-shadow">
+                                        <div className="invoice-card-header">
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-500">Order ID</p>
+                                                <h4 className="font-[Unbounded] text-lg">{invoice.orderNumber}</h4>
+                                            </div>
+                                            <span className={`status-pill ${invoice.status === 'emailed' ? 'sent' : 'pending'}`}>
+                                                {invoice.status?.toUpperCase() ?? 'PENDING'}
+                                            </span>
+                                        </div>
+                                        <div className="invoice-card-body">
+                                            <p className="font-bold">{invoice.customerName}</p>
+                                            <p className="text-xs uppercase tracking-[0.3em] text-gray-500">{invoice.customerEmail}</p>
+                                            <p className="mt-2 text-right font-[Unbounded] text-xl">{formatCurrency(invoice.total)}</p>
+                                        </div>
+                                        <div className="invoice-card-footer">
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500">Created</p>
+                                                <p className="font-mono text-xs">{invoice.createdAt ? format(invoice.createdAt, 'MMM dd, HH:mm') : 'Pending'}</p>
+                                            </div>
+                                            <div className="invoice-actions">
+                                                <button className="accent" onClick={() => handleDownloadInvoice(invoice)}>
+                                                    DOWNLOAD
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -687,6 +819,7 @@ const AdminPage: React.FC = () => {
         .inventory-actions { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: auto; }
         .add-btn { width: 100%; padding: var(--space-sm); font-size: 0.9rem; }
         .delete-btn { width: 100%; padding: var(--space-sm); font-size: 0.9rem; }
+        .price-btn { width: 100%; padding: var(--space-sm); font-size: 0.9rem; }
         
         /* Inline Add Stock Card */
         .add-stock-card { background: var(--surface); border: 3px solid var(--black); padding: var(--space-md); margin-top: var(--space-sm); box-shadow: 4px 4px 0px 0px var(--black); }
@@ -696,7 +829,8 @@ const AdminPage: React.FC = () => {
         .add-stock-confirm { flex: 1; padding: var(--space-sm); font-size: 0.9rem; }
         .add-stock-cancel { padding: var(--space-sm) var(--space-md); background: var(--surface); border: 3px solid var(--black); font-weight: bold; cursor: pointer; transition: all 0.15s ease; }
         .add-stock-cancel:hover { background: var(--gray-light); }
-        
+        .edit-price-card { background: var(--surface); border: 3px solid var(--black); padding: var(--space-md); margin-top: var(--space-sm); box-shadow: 4px 4px 0px 0px var(--black); }
+
         /* Search Section */
         .admin-search-section { background: var(--surface); border: var(--border-thick) solid var(--black); padding: var(--space-xl); margin-bottom: var(--space-xl); box-shadow: var(--shadow-hard); }
         .search-box { max-width: 600px; margin: 0 auto; }
@@ -714,6 +848,15 @@ const AdminPage: React.FC = () => {
         .order-item { display: flex; gap: var(--space-md); align-items: center; padding-bottom: var(--space-sm); border-bottom: 1px dashed var(--gray-light); }
         .order-item:last-child { border-bottom: none; padding-bottom: 0; }
         .order-footer { padding: var(--space-md); border-top: 3px solid var(--black); background: var(--gray-light); margin-top: auto; }
+        .invoices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-md); margin-top: var(--space-md); }
+        .invoice-card { padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm); background: var(--surface); border: var(--border-thick) solid var(--black); box-shadow: var(--shadow-tag); }
+        .invoice-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-sm); }
+        .invoice-card-body { border-top: var(--border-thin) dashed var(--black); border-bottom: var(--border-thin) dashed var(--black); padding: var(--space-sm) 0; display: flex; flex-direction: column; gap: var(--space-xs); }
+        .invoice-card-footer { display: flex; justify-content: space-between; align-items: flex-end; font-size: 0.75rem; gap: var(--space-md); }
+        .status-pill { padding: var(--space-xs) var(--space-sm); border: var(--border-thin) solid var(--black); font-size: 0.6rem; font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.1em; }
+        .status-pill.sent { background: var(--primary); color: var(--black); }
+        .status-pill.pending { background: var(--accent); color: var(--white); }
+        .invoice-actions button { padding: var(--space-xs) var(--space-md); font-size: 0.7rem; }
         
         .empty-state {
             text-align: center;
