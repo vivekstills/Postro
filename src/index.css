@@ -61,6 +61,11 @@
   --shadow-float: 7px 7px 0 var(--black);
 }
 
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 ::selection {
   background: var(--primary);
   color: var(--black);
@@ -81,12 +86,16 @@ body {
   min-height: 100vh;
 }
 
-@media (pointer: fine) {
-  body,
-  a,
-  button {
-    cursor: none;
-  }
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+body.cursor-hidden,
+body.cursor-hidden a,
+body.cursor-hidden button {
+  cursor: none;
 }
 
 #root {
@@ -471,5 +480,92 @@ select:focus {
 
   h3 {
     font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --space-lg: 1.25rem;
+    --space-xl: 1.75rem;
+    --space-2xl: 2.5rem;
+    --space-3xl: 3rem;
+  }
+
+  body {
+    font-size: 0.95rem;
+  }
+
+  .card {
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --space-lg: 1rem;
+    --space-xl: 1.25rem;
+    --space-2xl: 2rem;
+    --space-3xl: 2.5rem;
+    --border-thick: 2.5px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  .display-text {
+    font-size: clamp(2.5rem, 13vw, 3.5rem);
+  }
+}
+
+@media (max-width: 414px) {
+  button,
+  .btn {
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    padding: var(--space-sm) var(--space-lg);
+  }
+
+  .tag {
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .container {
+    padding: 0 var(--space-md);
+  }
+}
+
+@media (max-width: 375px) {
+  body {
+    font-size: 0.9rem;
+  }
+
+  button,
+  .btn {
+    padding: var(--space-sm) var(--space-md);
+  }
+}
+
+@media (max-width: 360px) {
+  h1 {
+    font-size: 1.85rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
   }
 }

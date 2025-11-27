@@ -68,6 +68,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
           font-size: 1.5rem;
           pointer-events: none;
         }
+
+        @media (max-width: 480px) {
+          .search-input {
+            font-size: 0.875rem;
+            letter-spacing: 0.04em;
+            padding-right: var(--space-2xl);
+          }
+
+          .search-icon {
+            font-size: 1.2rem;
+          }
+        }
       `}</style>
     </div>
   );

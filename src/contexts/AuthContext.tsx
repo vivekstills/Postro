@@ -1,11 +1,10 @@
 // Authentication Context - Global Auth State Management
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { User, ConfirmationResult } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 import {
-    signInWithGoogle as googleSignIn,
-    sendOTP as sendOTPFirebase,
-    verifyOTP as verifyOTPFirebase,
     signOutUser as signOutFirebase,
+    signUpWithEmailAndPassword as signUpEmailFirebase,
+    signInWithEmailPassword as signInEmailFirebase,
     onAuthStateChange,
 } from '../firebase/auth';
 import { useToast } from '../components/ToastProvider';
@@ -14,11 +13,9 @@ import { isFirebaseConfigured } from '../firebase/config';
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    signInWithGoogle: () => Promise<void>;
-    sendOTP: (phoneNumber: string) => Promise<void>;
-    verifyOTP: (code: string) => Promise<void>;
+    signUpWithEmail: (fullName: string, email: string, password: string) => Promise<void>;
+    signInWithEmail: (email: string, password: string) => Promise<void>;
     signOut: () => Promise<void>;
-    confirmationResult: ConfirmationResult | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,7 +23,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
     const { addToast } = useToast();
 
     // Listen to auth state changes
@@ -44,76 +40,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return () => unsubscribe();
     }, []);
 
-    // Google Sign-In
-    const signInWithGoogle = async () => {
+    const signUpWithEmail = async (fullName: string, email: string, password: string) => {
         if (!isFirebaseConfigured) {
             addToast('FIREBASE NOT CONFIGURED');
             return;
         }
         try {
-            const user = await googleSignIn();
-            if (user) {
-                addToast(`SIGNED IN AS ${user.displayName?.toUpperCase() || 'USER'}`);
-            }
+            const trimmedName = fullName.trim();
+            const user = await signUpEmailFirebase(email.trim(), password, trimmedName || undefined);
+            setUser(user);
+            addToast('ACCOUNT CREATED • WELCOME');
         } catch (error: any) {
-            console.error('Google sign-in error:', error);
-            if (error.code === 'auth/popup-closed-by-user') {
-                addToast('SIGN-IN CANCELLED');
-            } else {
-                addToast('ERROR • Failed to sign in with Google');
+            console.error('Email sign-up error:', error);
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    addToast('EMAIL ALREADY REGISTERED');
+                    break;
+                case 'auth/weak-password':
+                    addToast('PASSWORD TOO WEAK');
+                    break;
+                case 'auth/invalid-email':
+                    addToast('INVALID EMAIL');
+                    break;
+                default:
+                    addToast('ERROR • Failed to create account');
             }
             throw error;
         }
     };
 
-    // Send OTP to Phone Number
-    const sendOTP = async (phoneNumber: string) => {
+    const signInWithEmail = async (email: string, password: string) => {
         if (!isFirebaseConfigured) {
             addToast('FIREBASE NOT CONFIGURED');
             return;
         }
         try {
-            const result = await sendOTPFirebase(phoneNumber, 'recaptcha-container');
-            setConfirmationResult(result);
-            addToast('OTP SENT • CHECK YOUR PHONE');
+            const user = await signInEmailFirebase(email.trim(), password);
+            setUser(user);
+            addToast(`WELCOME BACK • ${user.email}`);
         } catch (error: any) {
-            console.error('Send OTP error:', error);
-            if (error.code === 'auth/invalid-phone-number') {
-                addToast('INVALID PHONE NUMBER');
-            } else if (error.code === 'auth/too-many-requests') {
-                addToast('TOO MANY REQUESTS • TRY AGAIN LATER');
-            } else {
-                addToast('ERROR • Failed to send OTP');
-            }
-            throw error;
-        }
-    };
-
-    // Verify OTP Code
-    const verifyOTP = async (code: string) => {
-        if (!confirmationResult) {
-            addToast('ERROR • OTP not sent yet');
-            throw new Error('No confirmation result available');
-        }
-        if (!isFirebaseConfigured) {
-            addToast('FIREBASE NOT CONFIGURED');
-            return;
-        }
-
-        try {
-            const user = await verifyOTPFirebase(confirmationResult, code);
-            if (user) {
-                addToast('PHONE VERIFIED • SIGNED IN');
-                setConfirmationResult(null);
-            }
-        } catch (error: any) {
-            console.error('Verify OTP error:', error);
-            if (error.code === 'auth/invalid-verification-code') {
-                addToast('INVALID OTP • TRY AGAIN');
-            } else if (error.code === 'auth/code-expired') {
-                addToast('OTP EXPIRED • REQUEST NEW CODE');
-            } else {
-                addToast('ERROR • Failed to verify OTP');
+            console.error('Email sign-in error:', error);
+            switch (error.code) {
+                case 'auth/user-not-found':
+                case 'auth/wrong-password':
+                    addToast('INVALID CREDENTIALS');
+                    break;
+                case 'auth/invalid-email':
+                    addToast('INVALID EMAIL');
+                    break;
+                default:
+                    addToast('ERROR • Failed to sign in');
             }
             throw error;
         }
@@ -123,13 +99,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const signOut = async () => {
         if (!isFirebaseConfigured) {
             setUser(null);
-            setConfirmationResult(null);
             return;
         }
         try {
             await signOutFirebase();
             setUser(null);
-            setConfirmationResult(null);
             addToast('SIGNED OUT');
         } catch (error: any) {
             console.error('Sign out error:', error);
@@ -143,11 +117,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             value={{
                 user,
                 loading,
-                signInWithGoogle,
-                sendOTP,
-                verifyOTP,
+                signUpWithEmail,
+                signInWithEmail,
                 signOut,
-                confirmationResult,
             }}
         >
             {children}

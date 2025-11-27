@@ -381,6 +381,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
         try {
             const { subtotal, shipping, total } = calculateTotals(cart.items, DEFAULT_SHIPPING_FEE);
+            const shouldSendEmail = isInvoiceEmailConfigured();
             const invoiceData: InvoiceInput = {
                 orderNumber: generateInvoiceNumber(),
                 customerName: details.fullName,
@@ -394,25 +395,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 subtotal,
                 shipping,
                 total,
-                status: isInvoiceEmailConfigured() ? 'pending' : 'pending-email'
+                status: shouldSendEmail ? 'pending' : 'pending-email'
             };
 
             const invoice = await createInvoice(invoiceData);
-            let emailed = false;
+            let emailPromise: Promise<'sent' | 'failed'> | undefined;
 
-            if (isInvoiceEmailConfigured()) {
-                try {
-                    await sendInvoiceEmail(invoice);
-                    emailed = true;
-                    if (invoice.id) {
-                        await updateInvoice(invoice.id, { status: 'emailed', emailedAt: new Date() });
-                    }
-                } catch (emailError) {
-                    console.error('Failed to send invoice email:', emailError);
-                    if (invoice.id) {
-                        await updateInvoice(invoice.id, { status: 'pending-email' });
-                    }
-                }
+            if (shouldSendEmail) {
+                emailPromise = sendInvoiceEmail(invoice)
+                    .then(async () => {
+                        if (invoice.id) {
+                            await updateInvoice(invoice.id, { status: 'emailed', emailedAt: new Date() });
+                        }
+                        addToast('INVOICE EMAIL SENT');
+                        return 'sent' as const;
+                    })
+                    .catch(async (emailError) => {
+                        console.error('Failed to send invoice email:', emailError);
+                        if (invoice.id) {
+                            await updateInvoice(invoice.id, { status: 'pending-email' });
+                        }
+                        addToast('EMAIL FAILED • TAP RESEND');
+                        return 'failed' as const;
+                    });
             }
 
             await clearCart(sessionId);
@@ -423,10 +428,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             return {
                 invoice: {
                     ...invoice,
-                    status: emailed ? 'emailed' : 'pending-email',
-                    emailedAt: emailed ? new Date() : invoice.emailedAt
+                    status: shouldSendEmail ? 'pending' : 'pending-email',
+                    emailedAt: invoice.emailedAt
                 },
-                emailed
+                emailed: !shouldSendEmail,
+                emailPending: shouldSendEmail,
+                emailPromise
             };
         } catch (error) {
             console.error('Error completing checkout:', error);

@@ -81,4 +81,6 @@ export interface CheckoutDetails {
 export interface CheckoutResult {
     invoice: Invoice;
     emailed: boolean;
+    emailPending?: boolean;
+    emailPromise?: Promise<'sent' | 'failed'>;
 }

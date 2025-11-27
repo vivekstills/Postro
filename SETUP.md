@@ -48,11 +48,27 @@ VITE_FIREBASE_PROJECT_ID=your-project-id
 VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
 VITE_FIREBASE_APP_ID=your-app-id
+VITE_EMAILJS_API_URL=https://api.emailjs.com/api/v1.0/email/send
+VITE_EMAILJS_SERVICE_ID=your-emailjs-service
+VITE_EMAILJS_TEMPLATE_ID=your-emailjs-template
+VITE_EMAILJS_PUBLIC_KEY=your-emailjs-public-key
+VITE_EMAILJS_ACCESS_TOKEN=optional-if-template-uses-access-token
 ```
 
 These environment variables are consumed via `import.meta.env` so they stay out of the bundled source.
 
-### 3. Run the Development Server
+### 3. Configure Invoice Emails (EmailJS)
+
+Invoice receipts are sent through [EmailJS](https://www.emailjs.com/) so no custom backend is required. Create a service + template, then set the env variables above:
+
+1. **service id** → `VITE_EMAILJS_SERVICE_ID`
+2. **template id** → `VITE_EMAILJS_TEMPLATE_ID`
+3. **public key** → `VITE_EMAILJS_PUBLIC_KEY`
+4. **access token** (only if your template enforces one) → `VITE_EMAILJS_ACCESS_TOKEN`
+
+Include template variables like `to_email`, `order_number`, `items`, etc. so the receipt renders correctly. Without these keys the checkout UI will still work, but customers won’t receive emails.
+
+### 4. Run the Development Server
 
 ```bash
 npm run dev
@@ -60,7 +76,7 @@ npm run dev
 
 Open http://localhost:5173 in your browser
 
-### 4. Admin Access
+### 5. Admin Access
 
 - Navigate to `/admin`
 - Default password: **postro2025** (update `ADMIN_PASSWORD` in `src/pages/AdminPage.tsx` before shipping)

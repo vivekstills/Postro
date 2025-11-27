@@ -170,6 +170,21 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                 @media (max-width: 600px) {
                     .products-grid {
                         grid-template-columns: 1fr;
+                        gap: var(--space-lg);
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .product-grid-container {
+                        padding-bottom: var(--space-xl);
+                    }
+
+                    .products-grid {
+                        gap: var(--space-md);
+                    }
+
+                    .products-count {
+                        justify-content: center;
                     }
                 }
             `}</style>

@@ -1,6 +1,6 @@
 // Firebase Configuration
 import { initializeApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
+import { getAuth, type Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
 type FirebaseConfigKeys =
@@ -32,5 +32,11 @@ export const firebaseConfigError = !isFirebaseConfigured
 export const firebaseApp: FirebaseApp | null = isFirebaseConfigured ? initializeApp(firebaseConfig) : null;
 export const db: Firestore | null = firebaseApp ? getFirestore(firebaseApp) : null;
 export const auth: Auth | null = firebaseApp ? getAuth(firebaseApp) : null;
+
+if (auth) {
+    setPersistence(auth, browserLocalPersistence).catch((error) => {
+        console.error('Failed to set auth persistence:', error);
+    });
+}
 
 export default firebaseApp;

@@ -1,83 +1,38 @@
 // Firebase Authentication Helper Functions
 import {
-    GoogleAuthProvider,
-    signInWithPopup,
     signOut,
     onAuthStateChanged,
-    RecaptchaVerifier,
-    signInWithPhoneNumber,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    updateProfile,
     type User,
-    type ConfirmationResult,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config';
 
-// Google Sign-In
-export const signInWithGoogle = async (): Promise<User | null> => {
+// Email + Password Sign-Up
+export const signUpWithEmailAndPassword = async (
+    email: string,
+    password: string,
+    displayName?: string
+): Promise<User> => {
     if (!auth) throw new Error('Firebase Auth is not initialized');
 
-    const provider = new GoogleAuthProvider();
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-
-        // Save user to Firestore
-        await saveUserToFirestore(user);
-
-        return user;
-    } catch (error: any) {
-        console.error('Google sign-in error:', error);
-        throw error;
+    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    if (displayName) {
+        await updateProfile(credential.user, { displayName });
     }
+    await saveUserToFirestore(credential.user);
+    return credential.user;
 };
 
-// Phone Sign-In - Step 1: Send OTP
-export const sendOTP = async (
-    phoneNumber: string,
-    recaptchaContainerId: string
-): Promise<ConfirmationResult> => {
+// Email + Password Sign-In
+export const signInWithEmailPassword = async (email: string, password: string): Promise<User> => {
     if (!auth) throw new Error('Firebase Auth is not initialized');
 
-    try {
-        // Initialize reCAPTCHA verifier
-        const recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerId, {
-            size: 'invisible',
-            callback: () => {
-                console.log('reCAPTCHA solved');
-            },
-        });
-
-        // Send OTP
-        const confirmationResult = await signInWithPhoneNumber(
-            auth,
-            phoneNumber,
-            recaptchaVerifier
-        );
-
-        return confirmationResult;
-    } catch (error: any) {
-        console.error('Send OTP error:', error);
-        throw error;
-    }
-};
-
-// Phone Sign-In - Step 2: Verify OTP
-export const verifyOTP = async (
-    confirmationResult: ConfirmationResult,
-    code: string
-): Promise<User | null> => {
-    try {
-        const result = await confirmationResult.confirm(code);
-        const user = result.user;
-
-        // Save user to Firestore
-        await saveUserToFirestore(user);
-
-        return user;
-    } catch (error: any) {
-        console.error('OTP verification error:', error);
-        throw error;
-    }
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    await saveUserToFirestore(credential.user);
+    return credential.user;
 };
 
 // Sign Out

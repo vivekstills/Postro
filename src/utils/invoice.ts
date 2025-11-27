@@ -7,6 +7,7 @@ const emailApiUrl = import.meta.env.VITE_EMAILJS_API_URL ?? 'https://api.emailjs
 const emailServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID ?? '';
 const emailTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID ?? '';
 const emailPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY ?? '';
+const emailAccessToken = import.meta.env.VITE_EMAILJS_ACCESS_TOKEN ?? '';
 
 export const isInvoiceEmailConfigured = (): boolean => (
     Boolean(emailServiceId && emailTemplateId && emailPublicKey)
@@ -128,6 +129,7 @@ export const sendInvoiceEmail = async (invoice: Invoice): Promise<void> => {
             service_id: emailServiceId,
             template_id: emailTemplateId,
             user_id: emailPublicKey,
+            accessToken: emailAccessToken || undefined,
             template_params: {
                 to_email: invoice.customerEmail,
                 to_name: invoice.customerName,
@@ -142,7 +144,8 @@ export const sendInvoiceEmail = async (invoice: Invoice): Promise<void> => {
     });
 
     if (!response.ok) {
-        throw new Error('FAILED_TO_SEND_INVOICE_EMAIL');
+        const errorMessage = await response.text().catch(() => 'Unknown error');
+        throw new Error(`FAILED_TO_SEND_INVOICE_EMAIL: ${errorMessage}`);
     }
 };
 

@@ -20,9 +20,29 @@ const CustomCursor: FC = () => {
     const media = window.matchMedia('(pointer: fine)');
     const update = () => setIsDesktop(media.matches);
     update();
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
+
+    const listener = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', listener);
+      return () => media.removeEventListener('change', listener);
+    }
+
+    // Fallback for older browsers
+    // eslint-disable-next-line deprecation/deprecation
+    media.addListener(listener);
+    return () => {
+      // eslint-disable-next-line deprecation/deprecation
+      media.removeListener(listener);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!isDesktop || typeof document === 'undefined') return;
+    document.body.classList.add('cursor-hidden');
+    return () => {
+      document.body.classList.remove('cursor-hidden');
+    };
+  }, [isDesktop]);
 
   useEffect(() => {
     if (!isDesktop) return;

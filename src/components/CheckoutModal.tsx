@@ -68,13 +68,27 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             return;
         }
         setIsSubmitting(true);
-        const result = await onCheckout(formValues);
-        setIsSubmitting(false);
+        try {
+            const result = await onCheckout(formValues);
+            if (result) {
+                setCheckoutResult(result);
 
-        if (result) {
-            setCheckoutResult(result);
-            setEmailStatus(result.emailed ? 'sent' : 'failed');
-            onCheckoutComplete?.(result);
+                if (result.emailPending && result.emailPromise) {
+                    setEmailStatus('sending');
+                    result.emailPromise.then((status) => {
+                        setEmailStatus(status === 'sent' ? 'sent' : 'failed');
+                    });
+                } else {
+                    setEmailStatus(result.emailed ? 'sent' : 'failed');
+                }
+
+                onCheckoutComplete?.(result);
+            }
+        } catch (error) {
+            console.error('Checkout submission failed:', error);
+            addToast('ERROR • Checkout failed');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -140,14 +154,14 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     );
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-4">
-            <div className="w-full max-w-3xl border-[4px] border-black bg-white p-6 shadow-[12px_12px_0px_0px_#000]">
-                <div className="flex items-center justify-between border-b-[3px] border-black pb-4">
+        <div className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-black/70 px-4 py-6 sm:px-6">
+            <div className="w-full max-w-3xl border-[4px] border-black bg-white p-4 sm:p-6 shadow-[12px_12px_0px_0px_#000] max-h-[calc(100vh-2rem)] overflow-y-auto">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b-[3px] border-black pb-4">
                     <div>
                         <p className="text-xs font-bold uppercase tracking-[0.5em] text-dark/40">Secure Checkout</p>
                         <h2 className="font-[Unbounded] text-3xl font-black uppercase">Complete Your Order</h2>
                     </div>
-                    <button onClick={onClose} className="border-[3px] border-black px-3 py-2 font-bold uppercase tracking-[0.2em]">
+                    <button onClick={onClose} className="border-[3px] border-black px-3 py-2 text-sm font-bold uppercase tracking-[0.2em]">
                         Close
                     </button>
                 </div>
@@ -226,7 +240,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 disabled={isSubmitting}
                                 className="mt-6 w-full border-[3px] border-black bg-[#FF0099] py-4 text-lg font-black uppercase tracking-[0.3em] text-white shadow-[6px_6px_0px_0px_#000]"
                             >
-                                {isSubmitting ? 'Processing…' : 'Confirm & Generate Receipt'}
+                                {isSubmitting ? 'Processing...' : 'Confirm & Generate Receipt'}
                             </button>
                         </div>
                     </form>
