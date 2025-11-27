@@ -26,36 +26,31 @@ const ensureDb = () => {
 
 const getProductsCollection = () => collection(ensureDb(), 'products');
 
+const mapProductData = (data: any, id: string): Product => ({
+    id,
+    ...data,
+    price: typeof data.price === 'number' ? data.price : 0,
+    createdAt: data.createdAt?.toDate?.()
+});
+
 // Fetch all products
 export const getAllProducts = async (): Promise<Product[]> => {
     const snapshot = await getDocs(query(getProductsCollection(), orderBy('createdAt', 'desc')));
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate()
-    })) as Product[];
+    return snapshot.docs.map(doc => mapProductData(doc.data(), doc.id));
 };
 
 // Get products by category
 export const getProductsByCategory = async (category: string): Promise<Product[]> => {
     const q = query(getProductsCollection(), where('category', '==', category), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate()
-    })) as Product[];
+    return snapshot.docs.map(doc => mapProductData(doc.data(), doc.id));
 };
 
 // Get products by subcategory
 export const getProductsBySubcategory = async (subcategory: string): Promise<Product[]> => {
     const q = query(getProductsCollection(), where('subcategory', '==', subcategory), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate()
-    })) as Product[];
+    return snapshot.docs.map(doc => mapProductData(doc.data(), doc.id));
 };
 
 // Search products by name or tags
@@ -78,11 +73,7 @@ export const subscribeToProducts = (callback: (products: Product[]) => void) => 
     const q = query(getProductsCollection(), orderBy('createdAt', 'desc'));
 
     return onSnapshot(q, (snapshot) => {
-        const products = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate()
-        })) as Product[];
+        const products = snapshot.docs.map(doc => mapProductData(doc.data(), doc.id));
         callback(products);
     });
 };
@@ -126,11 +117,7 @@ export const getProduct = async (productId: string): Promise<Product | null> => 
 
     if (!snapshot.exists()) return null;
 
-    return {
-        id: snapshot.id,
-        ...snapshot.data(),
-        createdAt: snapshot.data().createdAt?.toDate()
-    } as Product;
+    return mapProductData(snapshot.data(), snapshot.id);
 };
 
 // Delete product

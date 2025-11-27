@@ -1,8 +1,8 @@
-import React from 'react';
 import { useCart } from '../contexts/CartContext';
+import { formatCurrency } from '../utils/currency';
 
 const CartDrawer = () => {
-    const { isCartOpen, toggleCart, cartItems, updateQuantity, removeFromCart, totalPrice, timeRemaining } = useCart();
+    const { isCartOpen, toggleCart, cartItems, updateQuantity, removeFromCart, totalPrice, timeRemaining, cartItemCount } = useCart();
 
     const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
         try {
@@ -34,7 +34,7 @@ const CartDrawer = () => {
                 {/* HEADER */}
                 <div className="flex justify-between items-center p-6 border-b-[3px] border-black bg-[#CCFF00]">
                     <div className="flex flex-col">
-                        <h2 className="font-[Unbounded] text-2xl font-black uppercase">Your Cart ({cartItems.length})</h2>
+                        <h2 className="font-[Unbounded] text-2xl font-black uppercase">Your Cart ({cartItemCount})</h2>
                         {cartItems.length > 0 && (
                             <p className="text-xs font-bold uppercase tracking-wider mt-1">
                                 Expires in: <span className="text-[#FF0099]">{timeRemaining}</span>
@@ -51,8 +51,10 @@ const CartDrawer = () => {
                     {cartItems.length === 0 ? (
                         <div className="text-center mt-10 opacity-50 font-[Space_Grotesk]">YOUR CART IS EMPTY</div>
                     ) : (
-                        cartItems.map((item) => (
-                            <div key={item.productId} className="relative flex gap-4 bg-white border-[3px] border-black p-3 shadow-[4px_4px_0px_0px_#000]">
+                        cartItems.map((item) => {
+                            const lineTotal = item.price * item.quantity;
+                            return (
+                                <div key={item.productId} className="relative flex gap-4 bg-white border-[3px] border-black p-3 shadow-[4px_4px_0px_0px_#000]">
 
                                 {/* IMAGE */}
                                 <div className="w-20 h-24 border-2 border-black flex-shrink-0">
@@ -64,6 +66,10 @@ const CartDrawer = () => {
                                     <div>
                                         <h3 className="font-[Unbounded] font-bold text-sm uppercase leading-tight">{item.productName}</h3>
                                         <span className="bg-black text-white text-[10px] px-1 uppercase font-bold">{item.productType}</span>
+                                    </div>
+                                    <div className="mt-2 flex items-center justify-between text-xs font-bold uppercase tracking-[0.3em] text-dark/50">
+                                        <span>Each {formatCurrency(item.price)}</span>
+                                        <span className="font-[Unbounded] text-base text-dark">Total {formatCurrency(lineTotal)}</span>
                                     </div>
 
                                     {/* QUANTITY CONTROLS (THE LOGIC FIX) */}
@@ -88,7 +94,7 @@ const CartDrawer = () => {
                                             </button>
                                         </div>
 
-                                        {/* DELETE BUTTON */}
+                                {/* DELETE BUTTON */}
                                         <button
                                             onClick={() => handleRemoveItem(item.productId)}
                                             className="ml-auto text-gray-400 hover:text-red-600"
@@ -99,7 +105,8 @@ const CartDrawer = () => {
                                     </div>
                                 </div>
                             </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
 
@@ -107,7 +114,7 @@ const CartDrawer = () => {
                 <div className="absolute bottom-0 w-full p-6 bg-white border-t-[3px] border-black">
                     <div className="flex justify-between mb-4 font-[Unbounded] font-bold text-xl">
                         <span>TOTAL</span>
-                        <span>${totalPrice.toFixed(2)}</span>
+                        <span>{formatCurrency(totalPrice)}</span>
                     </div>
                     <button className="w-full bg-[#FF0099] border-[3px] border-black py-3 font-[Unbounded] font-black uppercase text-white shadow-[4px_4px_0px_0px_#000] hover:translate-y-1 hover:shadow-none hover:bg-black transition-all">
                         Checkout

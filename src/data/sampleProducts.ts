@@ -13,7 +13,8 @@ export const sampleProducts = [
         tags: ['anime', 'naruto', 'ninja', 'action', 'orange'],
         // Replace with actual image URL after upload
         imageUrl: 'https://placehold.co/600x800/FF6B1A/FFFFFF?text=Naruto+Poster',
-        stock: 15
+        stock: 15,
+        price: 799
     },
     {
         name: 'Gojo Satoru Jujutsu Kaisen',
@@ -22,7 +23,8 @@ export const sampleProducts = [
         subcategory: 'Jujutsu Kaisen',
         tags: ['anime', 'jjk', 'jujutsu kaisen', 'gojo', 'blue'],
         imageUrl: 'https://placehold.co/600x800/0066FF/FFFFFF?text=Gojo+Poster',
-        stock: 12
+        stock: 12,
+        price: 999
     },
     {
         name: 'Saitama One Punch Man',
@@ -31,7 +33,8 @@ export const sampleProducts = [
         subcategory: 'One Punch Man',
         tags: ['anime', 'opm', 'saitama', 'hero'],
         imageUrl: 'https://placehold.co/600x800/FFD700/000000?text=Saitama+Poster',
-        stock: 10
+        stock: 10,
+        price: 749
     },
 
     // Movie Posters
@@ -42,7 +45,8 @@ export const sampleProducts = [
         subcategory: 'Marvel',
         tags: ['marvel', 'spiderman', 'superhero', 'action'],
         imageUrl: 'https://placehold.co/600x800/DC143C/FFFFFF?text=Spider-Man',
-        stock: 20
+        stock: 20,
+        price: 1299
     },
     {
         name: 'The Dark Knight',
@@ -51,7 +55,8 @@ export const sampleProducts = [
         subcategory: 'DC',
         tags: ['dc', 'batman', 'joker', 'dark'],
         imageUrl: 'https://placehold.co/600x800/000000/FFFFFF?text=Dark+Knight',
-        stock: 8
+        stock: 8,
+        price: 1199
     },
 
     // Car Posters
@@ -62,7 +67,8 @@ export const sampleProducts = [
         subcategory: 'JDM',
         tags: ['car', 'nissan', 'gtr', 'jdm', 'racing'],
         imageUrl: 'https://placehold.co/600x800/C0C0C0/000000?text=GTR+R35',
-        stock: 18
+        stock: 18,
+        price: 1099
     },
     {
         name: 'Lamborghini Aventador',
@@ -71,7 +77,8 @@ export const sampleProducts = [
         subcategory: 'Supercars',
         tags: ['car', 'lamborghini', 'supercar', 'italian'],
         imageUrl: 'https://placehold.co/600x800/FFD700/000000?text=Aventador',
-        stock: 14
+        stock: 14,
+        price: 1499
     },
 
     // Stickers
@@ -82,7 +89,8 @@ export const sampleProducts = [
         subcategory: 'Sarcastic',
         tags: ['sticker', 'funny', 'sarcastic', 'humor'],
         imageUrl: 'https://placehold.co/400x400/FF1493/FFFFFF?text=Sarcastic',
-        stock: 50
+        stock: 50,
+        price: 299
     },
     {
         name: 'Naruto Symbols Sticker Set',
@@ -91,7 +99,8 @@ export const sampleProducts = [
         subcategory: 'Anime',
         tags: ['sticker', 'anime', 'naruto', 'symbols'],
         imageUrl: 'https://placehold.co/400x400/FF6B1A/000000?text=Naruto+Set',
-        stock: 30
+        stock: 30,
+        price: 249
     }
 ];
 

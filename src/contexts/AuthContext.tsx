@@ -9,6 +9,7 @@ import {
     onAuthStateChange,
 } from '../firebase/auth';
 import { useToast } from '../components/ToastProvider';
+import { isFirebaseConfigured } from '../firebase/config';
 
 interface AuthContextType {
     user: User | null;
@@ -30,6 +31,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Listen to auth state changes
     useEffect(() => {
+        if (!isFirebaseConfigured) {
+            setLoading(false);
+            return () => { };
+        }
+
         const unsubscribe = onAuthStateChange((user) => {
             setUser(user);
             setLoading(false);
@@ -40,6 +46,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Google Sign-In
     const signInWithGoogle = async () => {
+        if (!isFirebaseConfigured) {
+            addToast('FIREBASE NOT CONFIGURED');
+            return;
+        }
         try {
             const user = await googleSignIn();
             if (user) {
@@ -58,6 +68,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Send OTP to Phone Number
     const sendOTP = async (phoneNumber: string) => {
+        if (!isFirebaseConfigured) {
+            addToast('FIREBASE NOT CONFIGURED');
+            return;
+        }
         try {
             const result = await sendOTPFirebase(phoneNumber, 'recaptcha-container');
             setConfirmationResult(result);
@@ -81,6 +95,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             addToast('ERROR • OTP not sent yet');
             throw new Error('No confirmation result available');
         }
+        if (!isFirebaseConfigured) {
+            addToast('FIREBASE NOT CONFIGURED');
+            return;
+        }
 
         try {
             const user = await verifyOTPFirebase(confirmationResult, code);
@@ -103,6 +121,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Sign Out
     const signOut = async () => {
+        if (!isFirebaseConfigured) {
+            setUser(null);
+            setConfirmationResult(null);
+            return;
+        }
         try {
             await signOutFirebase();
             setUser(null);

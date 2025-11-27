@@ -8,6 +8,7 @@ import Marquee from '../components/Marquee';
 import CartDrawer from '../components/CartDrawer';
 import { subscribeToProducts } from '../firebase/products';
 import type { Product } from '../types';
+import { readProductCache, writeProductCache } from '../utils/productCache';
 
 const HomePage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -15,12 +16,21 @@ const HomePage: React.FC = () => {
   const [productTypeFilter, setProductTypeFilter] = useState<'poster' | 'sticker'>('poster');
   const [isLoading, setIsLoading] = useState(true);
 
+  // Hydrate instantly from the last cached product snapshot
+  useEffect(() => {
+    const cachedProducts = readProductCache();
+    if (cachedProducts && cachedProducts.length > 0) {
+      setProducts(cachedProducts);
+      setIsLoading(false);
+    }
+  }, []);
 
   // Subscribe to real-time product updates
   useEffect(() => {
     const unsubscribe = subscribeToProducts((updatedProducts) => {
       setProducts(updatedProducts);
       setIsLoading(false);
+      writeProductCache(updatedProducts);
     });
 
     return () => unsubscribe();

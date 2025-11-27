@@ -9,7 +9,8 @@ export interface Product {
     tags: string[];
     imageUrl: string;
     stock: number;
-    createdAt: Date;
+    price: number;
+    createdAt?: Date | null;
 }
 
 export interface Category {
@@ -36,13 +37,14 @@ export interface CartItem {
     productType: 'poster' | 'sticker';
     imageUrl: string;
     quantity: number;
+    price: number;
 }
 
 export interface Cart {
     id?: string;
     sessionId: string;
     items: CartItem[];
-    createdAt: Date;
-    lastUpdated: Date;
-    expiresAt: Date;
+    createdAt?: Date | null;
+    lastUpdated?: Date | null;
+    expiresAt?: Date | null;
 }

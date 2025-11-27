@@ -4,6 +4,7 @@ import type { FC } from 'react';
 import type { Product } from '../types';
 import StockBadge from './StockBadge';
 import { useToast } from './ToastProvider';
+import { formatCurrency } from '../utils/currency';
 
 interface ProductCardProps {
   product: Product;
@@ -33,6 +34,7 @@ const springTransition: Transition = { type: 'spring', stiffness: 400, damping: 
 const ProductCard: FC<ProductCardProps> = ({ product, onSelect }) => {
   const isSoldOut = product.stock === 0;
   const { addToast } = useToast();
+  const formattedPrice = formatCurrency(product.price);
 
   const handleClick = () => {
     if (isSoldOut) {
@@ -86,6 +88,11 @@ const ProductCard: FC<ProductCardProps> = ({ product, onSelect }) => {
               {tag}
             </span>
           ))}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-dark/10 pt-4">
+          <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-dark/50">Price</span>
+          <span className="font-display text-2xl font-black text-dark">{formattedPrice}</span>
         </div>
 
         <motion.button

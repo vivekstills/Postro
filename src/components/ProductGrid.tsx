@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import type { Product } from '../types';
 import ProductCard from './ProductCard';
 import { useCart } from '../contexts/CartContext';
-import { useToast } from './ToastProvider';
 import '../index.css';
 
 interface ProductGridProps {

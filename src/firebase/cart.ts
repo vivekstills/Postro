@@ -10,11 +10,10 @@ import {
     query,
     where,
     onSnapshot,
-    Timestamp,
-    increment
+    Timestamp
 } from 'firebase/firestore';
 import { db, firebaseConfigError, isFirebaseConfigured } from './config';
-import type { Cart, Product } from '../types';
+import type { Cart, CartItem, Product } from '../types';
 import { decreaseStock, increaseStock, getProduct } from './products';
 
 const ensureDb = () => {
@@ -25,6 +24,40 @@ const ensureDb = () => {
 };
 
 const getCartsCollection = () => collection(ensureDb(), 'carts');
+
+const sanitizePrice = (value: unknown): number => {
+    const parsed = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+        return 0;
+    }
+    return parsed;
+};
+
+const mapCartItem = (item: any): CartItem => ({
+    productId: item.productId,
+    productName: item.productName,
+    productType: item.productType,
+    imageUrl: item.imageUrl,
+    quantity: item.quantity ?? 0,
+    price: sanitizePrice(item.price)
+});
+
+const toDate = (value: any): Date | null => {
+    if (!value) return null;
+    if (typeof value.toDate === 'function') {
+        return value.toDate();
+    }
+    return value instanceof Date ? value : null;
+};
+
+const mapCartDocument = (data: any, id?: string): Cart => ({
+    id,
+    sessionId: data.sessionId,
+    items: Array.isArray(data.items) ? data.items.map(mapCartItem) : [],
+    createdAt: toDate(data.createdAt),
+    lastUpdated: toDate(data.lastUpdated),
+    expiresAt: toDate(data.expiresAt)
+});
 
 // Helper to calculate expiration time (1 hour from now)
 const getExpirationTime = (): Date => {
@@ -43,15 +76,19 @@ export const addToCart = async (sessionId: string, product: Product): Promise<vo
     if (!currentProduct || currentProduct.stock <= 0) {
         throw new Error('Product out of stock');
     }
+    const resolvedPrice = sanitizePrice(product.price ?? currentProduct.price);
 
     if (cartSnap.exists()) {
         // Cart exists - update it
-        const cart = cartSnap.data() as Cart;
+        const cart = mapCartDocument(cartSnap.data(), cartSnap.id);
         const existingItem = cart.items.find(item => item.productId === product.id);
 
         if (existingItem) {
             // Increment quantity
             existingItem.quantity += 1;
+            if (typeof existingItem.price !== 'number' || Number.isNaN(existingItem.price)) {
+                existingItem.price = resolvedPrice;
+            }
         } else {
             // Add new item
             cart.items.push({
@@ -59,7 +96,8 @@ export const addToCart = async (sessionId: string, product: Product): Promise<vo
                 productName: product.name,
                 productType: product.type,
                 imageUrl: product.imageUrl,
-                quantity: 1
+                quantity: 1,
+                price: resolvedPrice
             });
         }
 
@@ -79,7 +117,8 @@ export const addToCart = async (sessionId: string, product: Product): Promise<vo
                 productName: product.name,
                 productType: product.type,
                 imageUrl: product.imageUrl,
-                quantity: 1
+                quantity: 1,
+                price: resolvedPrice
             }],
             createdAt: Timestamp.fromDate(now),
             lastUpdated: Timestamp.fromDate(now),
@@ -104,7 +143,7 @@ export const updateCartItemQuantity = async (
         throw new Error('Cart not found');
     }
 
-    const cart = cartSnap.data() as Cart;
+    const cart = mapCartDocument(cartSnap.data(), cartSnap.id);
     const item = cart.items.find(i => i.productId === productId);
 
     if (!item) {
@@ -150,7 +189,7 @@ export const removeFromCart = async (sessionId: string, productId: string): Prom
 
     if (!cartSnap.exists()) return;
 
-    const cart = cartSnap.data() as Cart;
+    const cart = mapCartDocument(cartSnap.data(), cartSnap.id);
     const item = cart.items.find(i => i.productId === productId);
 
     if (item) {
@@ -173,16 +212,7 @@ export const getCart = async (sessionId: string): Promise<Cart | null> => {
     const cartSnap = await getDoc(cartRef);
 
     if (!cartSnap.exists()) return null;
-
-    const data = cartSnap.data();
-    return {
-        id: cartSnap.id,
-        sessionId: data.sessionId,
-        items: data.items,
-        createdAt: data.createdAt?.toDate(),
-        lastUpdated: data.lastUpdated?.toDate(),
-        expiresAt: data.expiresAt?.toDate()
-    } as Cart;
+    return mapCartDocument(cartSnap.data(), cartSnap.id);
 };
 
 // Subscribe to cart changes for a user
@@ -211,14 +241,7 @@ export const subscribeToCart = (sessionId: string, callback: (cart: Cart | null)
         // Only trigger callback if data actually changed
         if (currentSnapshot !== lastCartSnapshot) {
             lastCartSnapshot = currentSnapshot;
-            callback({
-                id: snapshot.id,
-                sessionId: data.sessionId,
-                items: data.items,
-                createdAt: data.createdAt?.toDate(),
-                lastUpdated: data.lastUpdated?.toDate(),
-                expiresAt: data.expiresAt?.toDate()
-            } as Cart);
+            callback(mapCartDocument(data, snapshot.id));
         }
     });
 };
@@ -234,19 +257,10 @@ export const subscribeToAllCarts = (callback: (carts: Cart[]) => void) => {
 
     return onSnapshot(q, (snapshot) => {
         const now = new Date();
-        const carts = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                sessionId: data.sessionId,
-                items: data.items,
-                createdAt: data.createdAt?.toDate(),
-                lastUpdated: data.lastUpdated?.toDate(),
-                expiresAt: data.expiresAt?.toDate()
-            } as Cart;
-        })
-            .filter(cart => cart.items.length > 0) // Filter out empty carts
-            .filter(cart => cart.expiresAt && cart.expiresAt > now); // Filter out expired carts
+        const carts = snapshot.docs
+            .map(doc => mapCartDocument(doc.data(), doc.id))
+            .filter(cart => cart.items.length > 0)
+            .filter(cart => cart.expiresAt && cart.expiresAt > now);
 
         callback(carts);
     });
@@ -259,7 +273,7 @@ export const clearCart = async (sessionId: string): Promise<void> => {
 
     if (!cartSnap.exists()) return;
 
-    const cart = cartSnap.data() as Cart;
+    const cart = mapCartDocument(cartSnap.data(), cartSnap.id);
 
     // Restore stock for all items
     for (const item of cart.items) {

@@ -10,6 +10,7 @@ import { subscribeToAllCarts } from '../firebase/cart';
 import type { Product, SaleLog, Cart } from '../types';
 import { format } from 'date-fns';
 import { useToast } from '../components/ToastProvider';
+import { formatCurrency } from '../utils/currency';
 import '../index.css';
 
 const AdminPage: React.FC = () => {
@@ -29,6 +30,7 @@ const AdminPage: React.FC = () => {
     const [subcategory, setSubcategory] = useState('');
     const [tags, setTags] = useState('');
     const [stock, setStock] = useState(10);
+    const [price, setPrice] = useState('799');
     const [imageUrl, setImageUrl] = useState('');
     const [imageError, setImageError] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -101,6 +103,12 @@ const AdminPage: React.FC = () => {
             return;
         }
 
+        const parsedPrice = Number(price);
+        if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
+            addToast('INVALID PRICE');
+            return;
+        }
+
         setIsUploading(true);
 
         try {
@@ -113,7 +121,8 @@ const AdminPage: React.FC = () => {
                 subcategory: subcategory || undefined,
                 tags: tagArray,
                 imageUrl,
-                stock
+                stock,
+                price: parsedPrice
             });
 
             addToast(`${productName.toUpperCase()} • ADDED TO STORE`);
@@ -122,6 +131,7 @@ const AdminPage: React.FC = () => {
             setSubcategory('');
             setTags('');
             setStock(10);
+            setPrice('799');
             setImageUrl('');
             setImageError(false);
 
@@ -339,6 +349,19 @@ const AdminPage: React.FC = () => {
                                     <label className="form-label">INITIAL STOCK</label>
                                     <input type="number" value={stock} onChange={(e) => setStock(parseInt(e.target.value))} min="1" required />
                                 </div>
+
+                                <div className="form-section">
+                                    <label className="form-label">PRICE (INR)</label>
+                                    <input
+                                        type="number"
+                                        value={price}
+                                        onChange={(e) => setPrice(e.target.value)}
+                                        min="0.01"
+                                        step="0.01"
+                                        placeholder="799"
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <button
@@ -484,6 +507,7 @@ const AdminPage: React.FC = () => {
                                         <div className="inventory-meta">
                                             <span className="tag mt-sm">{product.type}</span>
                                             <span className="tag mt-sm">{product.stock} in stock</span>
+                                            <span className="tag mt-sm bg-black text-primary">{formatCurrency(product.price)}</span>
                                         </div>
                                     </div>
                                     <div className="inventory-actions">
@@ -560,11 +584,12 @@ const AdminPage: React.FC = () => {
                                     // Calculate time remaining
                                     const now = new Date();
                                     const expiresAt = cart.expiresAt;
-                                    const diff = expiresAt.getTime() - now.getTime();
+                                    const diff = expiresAt ? expiresAt.getTime() - now.getTime() : -1;
                                     const minutes = Math.floor(diff / 60000);
                                     const seconds = Math.floor((diff % 60000) / 1000);
                                     const timeString = diff <= 0 ? 'EXPIRED' : `${minutes}:${seconds.toString().padStart(2, '0')}`;
                                     const isExpiringSoon = diff > 0 && diff < 10 * 60 * 1000; // Less than 10 mins
+                                    const cartTotal = cart.items.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
 
                                     return (
                                         <div key={cart.id} className="order-card card card-shadow">
@@ -604,6 +629,10 @@ const AdminPage: React.FC = () => {
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Total Items</span>
                                                     <span className="font-[Unbounded] font-bold text-xl">{cart.items.reduce((acc, item) => acc + item.quantity, 0)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center mt-1">
+                                                     <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Cart Value</span>
+                                                     <span className="font-[Unbounded] font-bold text-xl">{formatCurrency(cartTotal)}</span>
                                                 </div>
                                                 <div className="mt-2 text-[10px] font-bold uppercase text-gray-400 text-right">
                                                     Last Active: {cart.lastUpdated ? format(cart.lastUpdated, 'HH:mm:ss') : 'Unknown'}
