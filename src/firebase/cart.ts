@@ -227,11 +227,8 @@ export const subscribeToCart = (sessionId: string, callback: (cart: Cart | null)
 
     return onSnapshot(cartRef, (snapshot) => {
         if (!snapshot.exists()) {
-            // Only trigger if we previously had data
-            if (lastCartSnapshot !== null) {
-                lastCartSnapshot = null;
-                callback(null);
-            }
+            lastCartSnapshot = null;
+            callback(null);
             return;
         }
 

@@ -166,7 +166,7 @@ const Navbar = () => {
             />
 
             {/* Sidebar Content */}
-            <div className={`fixed top-0 left-0 h-full w-[280px] sm:w-[320px] bg-[#F4F4F0] border-r-[3px] border-black z-50 transform transition-transform duration-300 ease-out shadow-[10px_0px_0px_0px_rgba(0,0,0,1)] ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
+            <div className={`fixed top-0 left-0 h-full w-full max-w-[320px] sm:max-w-[360px] bg-[#F4F4F0] border-r-[3px] border-black z-50 transform transition-transform duration-300 ease-out shadow-[10px_0px_0px_0px_rgba(0,0,0,1)] ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
 
                 {/* Close Button */}
                 <div className="p-4 flex justify-end flex-shrink-0">
@@ -176,7 +176,7 @@ const Navbar = () => {
                 </div>
 
                 {/* CATEGORIES SECTION */}
-                <div className="flex-1 px-6 pb-10 pt-2 sm:pt-4 overflow-y-auto">
+                <div className="flex-1 px-6 pb-10 pt-2 sm:pt-4 overflow-y-auto overflow-x-hidden">
                     <h2 className="font-[Unbounded] text-3xl font-black uppercase mb-2">Categories</h2>
                     <div className="w-full h-[3px] bg-black mb-6"></div>
 

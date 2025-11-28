@@ -1,5 +1,5 @@
 // Cart Context - Global cart state management
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { Cart, CartItem, Product, CheckoutDetails, CheckoutResult } from '../types';
 import {
@@ -16,6 +16,7 @@ import { isFirebaseConfigured } from '../firebase/config';
 import { createInvoice, updateInvoice } from '../firebase/invoices';
 import type { InvoiceInput } from '../firebase/invoices';
 import { calculateTotals, DEFAULT_SHIPPING_FEE, generateInvoiceNumber, isInvoiceEmailConfigured, sendInvoiceEmail } from '../utils/invoice';
+import { useAuth } from './AuthContext';
 
 interface CartContextType {
     cart: Cart | null;
@@ -35,23 +36,31 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Generate or retrieve session ID
-const getSessionId = (): string => {
+const SESSION_STORAGE_KEY = 'postro_session_id';
+
+const generateSessionToken = () =>
+    `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+interface SessionRotationResult {
+    sessionId: string;
+    staleSessionId: string | null;
+}
+
+const rotateSessionId = (): SessionRotationResult => {
+    const newSessionId = generateSessionToken();
+    let staleSessionId: string | null = null;
+
     try {
         if (typeof window === 'undefined' || !window.localStorage) {
             throw new Error('localStorage not available');
         }
-
-        let sessionId = window.localStorage.getItem('postro_session_id');
-        if (!sessionId) {
-            sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            window.localStorage.setItem('postro_session_id', sessionId);
-        }
-        return sessionId;
+        staleSessionId = window.localStorage.getItem(SESSION_STORAGE_KEY);
+        window.localStorage.setItem(SESSION_STORAGE_KEY, newSessionId);
     } catch (error) {
-        console.warn('Session storage unavailable, generating in-memory session id.', error);
-        return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        console.warn('Session storage unavailable, using in-memory session id.', error);
     }
+
+    return { sessionId: newSessionId, staleSessionId };
 };
 
 // localStorage cache utilities
@@ -59,23 +68,31 @@ const CART_CACHE_KEY = 'postro_cart_cache';
 const CART_CACHE_TIMESTAMP_KEY = 'postro_cart_cache_timestamp';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-const getCachedCart = (): Cart | null => {
+const buildCacheKey = (sessionId: string) => `${CART_CACHE_KEY}_${sessionId}`;
+const buildCacheTimestampKey = (sessionId: string) => `${CART_CACHE_TIMESTAMP_KEY}_${sessionId}`;
+
+const getCachedCart = (sessionId?: string): Cart | null => {
+    if (!sessionId) return null;
     try {
-        const cached = localStorage.getItem(CART_CACHE_KEY);
-        const timestamp = localStorage.getItem(CART_CACHE_TIMESTAMP_KEY);
+        // Clean up legacy global cache keys to prevent cross-session leakage
+        localStorage.removeItem(CART_CACHE_KEY);
+        localStorage.removeItem(CART_CACHE_TIMESTAMP_KEY);
+
+        const cacheKey = buildCacheKey(sessionId);
+        const timestampKey = buildCacheTimestampKey(sessionId);
+        const cached = localStorage.getItem(cacheKey);
+        const timestamp = localStorage.getItem(timestampKey);
 
         if (!cached || !timestamp) return null;
 
         const age = Date.now() - parseInt(timestamp);
         if (age > CACHE_TTL) {
-            // Cache expired
-            localStorage.removeItem(CART_CACHE_KEY);
-            localStorage.removeItem(CART_CACHE_TIMESTAMP_KEY);
+            localStorage.removeItem(cacheKey);
+            localStorage.removeItem(timestampKey);
             return null;
         }
 
         const parsedCart = JSON.parse(cached, (key, value) => {
-            // Revive Date objects
             if (key === 'createdAt' || key === 'lastUpdated' || key === 'expiresAt') {
                 return value ? new Date(value) : undefined;
             }
@@ -88,15 +105,18 @@ const getCachedCart = (): Cart | null => {
     }
 };
 
-const setCachedCart = (cart: Cart | null): void => {
+const setCachedCart = (sessionId: string, cart: Cart | null): void => {
+    if (!sessionId) return;
     try {
         const normalizedCart = normalizeCart(cart);
+        const cacheKey = buildCacheKey(sessionId);
+        const timestampKey = buildCacheTimestampKey(sessionId);
         if (normalizedCart) {
-            localStorage.setItem(CART_CACHE_KEY, JSON.stringify(normalizedCart));
-            localStorage.setItem(CART_CACHE_TIMESTAMP_KEY, Date.now().toString());
+            localStorage.setItem(cacheKey, JSON.stringify(normalizedCart));
+            localStorage.setItem(timestampKey, Date.now().toString());
         } else {
-            localStorage.removeItem(CART_CACHE_KEY);
-            localStorage.removeItem(CART_CACHE_TIMESTAMP_KEY);
+            localStorage.removeItem(cacheKey);
+            localStorage.removeItem(timestampKey);
         }
     } catch (error) {
         console.error('Error writing cart cache:', error);
@@ -135,14 +155,60 @@ const formatTimeRemaining = (expiresAt?: Date | null): string => {
 };
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-    const [cart, setCart] = useState<Cart | null>(() => {
-        // Initialize from cache if available
-        return getCachedCart();
-    });
+    const { user } = useAuth();
+    const initialSessionRef = useRef<SessionRotationResult | null>(null);
+    if (initialSessionRef.current === null) {
+        initialSessionRef.current = rotateSessionId();
+    }
+    const cleanupSessionRef = useRef<string | null>(initialSessionRef.current.staleSessionId);
+    const [sessionId, setSessionId] = useState<string>(initialSessionRef.current.sessionId);
+    const [cart, setCart] = useState<Cart | null>(() => getCachedCart(initialSessionRef.current!.sessionId));
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState('60:00');
     const { addToast } = useToast();
-    const sessionId = getSessionId();
+
+    const previousUserIdRef = useRef<string | null | undefined>(undefined);
+
+    // Rotate cart sessions when auth state changes to ensure clean carts per user/session
+    useEffect(() => {
+        const currentUserId = user?.uid ?? null;
+        if (previousUserIdRef.current === undefined) {
+            previousUserIdRef.current = currentUserId;
+            return;
+        }
+
+        if (previousUserIdRef.current === currentUserId) {
+            return;
+        }
+
+        previousUserIdRef.current = currentUserId;
+        const rotation = rotateSessionId();
+        if (rotation.staleSessionId) {
+            cleanupSessionRef.current = rotation.staleSessionId;
+        }
+
+        setCart(getCachedCart(rotation.sessionId));
+        setSessionId(rotation.sessionId);
+    }, [user]);
+
+    // Clean up any stale session carts when session changes
+    useEffect(() => {
+        const staleSessionId = cleanupSessionRef.current;
+        if (!staleSessionId) {
+            return;
+        }
+
+        cleanupSessionRef.current = null;
+        setCachedCart(staleSessionId, null);
+
+        if (!isFirebaseConfigured) {
+            return;
+        }
+
+        clearCart(staleSessionId).catch((error) => {
+            console.error('Failed to clear stale cart session:', error);
+        });
+    }, [sessionId]);
 
     // Subscribe to cart changes with caching
     useEffect(() => {
@@ -153,7 +219,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribe = subscribeToCart(sessionId, (updatedCart) => {
             const sanitizedCart = normalizeCart(updatedCart);
             setCart(sanitizedCart);
-            setCachedCart(sanitizedCart); // Update cache on every change
+            setCachedCart(sessionId, sanitizedCart); // Update cache on every change
         });
 
         return () => unsubscribe();
@@ -242,7 +308,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
             const sanitizedCart = normalizeCart(updatedCart);
             setCart(sanitizedCart);
-            setCachedCart(sanitizedCart);
+            setCachedCart(sessionId, sanitizedCart);
 
             // Then sync to Firebase
             await addToCartFirebase(sessionId, product);
@@ -284,7 +350,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
             const sanitizedCart = normalizeCart(updatedCart);
             setCart(sanitizedCart);
-            setCachedCart(sanitizedCart);
+            setCachedCart(sessionId, sanitizedCart);
 
             // Then sync to Firebase
             if (newQuantity <= 0) {
@@ -324,7 +390,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
             const sanitizedCart = normalizeCart(updatedCart);
             setCart(sanitizedCart);
-            setCachedCart(sanitizedCart);
+            setCachedCart(sessionId, sanitizedCart);
 
             // Then sync to Firebase
             await removeFromCartFirebase(sessionId, productId);
@@ -422,7 +488,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
             await clearCart(sessionId);
             setCart(null);
-            setCachedCart(null);
+            setCachedCart(sessionId, null);
             addToast('ORDER CONFIRMED • RECEIPT READY');
 
             return {
